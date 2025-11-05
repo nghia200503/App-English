@@ -30,7 +30,7 @@ export const authService = {
 
     // Lấy thông tin người dùng hiện tại
     fetchMe: async () => {
-        const res =  await api.get('/auth/me', { withCredentials: true });
+        const res =  await api.get('/users/me', { withCredentials: true });
         return res.data.user;
     },
 

@@ -22,14 +22,14 @@ app.use(cookieParser());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 
+app.use('/api/auth', authRoute);
+app.use(protectedRoute);
+app.use('/api/users', userRoute);
 app.use('/api/topics', topicRoute);
 app.use('/api/words', wordRoute);
 // Public route cho phép truy cập từ bên ngoài
-app.use('/api/auth', authRoute);
-// Private route, cần xác thực mới truy cập được
-app.use(protectedRoute);
-app.use('/api/auth', userRoute);
 
+// Private route, cần xác thực mới truy cập được
 // Chạy server
 connectDB().then(() => {
   app.listen(PORT, () => {
