@@ -33,7 +33,7 @@ function UserUpdate() {
     const fetchUser = async () => {
         try {
             setFetchLoading(true);
-            const response = await api.get(`/auth/users/${id}`);
+            const response = await api.get(`/users/users/${id}`);
             const user = response.data;
 
             setFormData({
@@ -110,7 +110,7 @@ function UserUpdate() {
             }
 
             // 5. Gọi API với FormData
-            await api.put(`/auth/users/${id}`, data, {
+            await api.put(`/users/users/${id}`, data, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                     // Axios sẽ tự động set header này khi data là FormData

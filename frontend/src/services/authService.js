@@ -42,7 +42,7 @@ export const authService = {
 
     // Lấy danh sách tất cả người dùng (dành cho admin)
     getAllUsers: async (page = 1, limit = 5) => {
-        const res = await api.get('/auth/list', {
+        const res = await api.get('/users/list', {
             params: { page, limit }
         });
         

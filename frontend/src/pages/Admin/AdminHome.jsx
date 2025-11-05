@@ -29,7 +29,7 @@ export default function AdminHome(){
       const [usersResponse, wordsResponse, topicsResponse] = await Promise.all([
         // SỬA ĐỔI: Yêu cầu limit lớn (ví dụ: 1000) để lấy TẤT CẢ user
         // mục đích là để đếm chính xác 'activeUsers'
-        api.get('/auth/list', { params: { page: 1, limit: 1000 } }), 
+        api.get('/users/list', { params: { page: 1, limit: 1000 } }), 
         api.get('/words', { params: { page: 1, limit: 1 } }), // Chỉ cần pagination data
         api.get('/topics/list', { params: { page: 1, limit: 1 } }) // Chỉ cần pagination data
       ]);

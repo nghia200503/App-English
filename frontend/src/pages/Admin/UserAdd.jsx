@@ -57,7 +57,7 @@ function UserAdd() {
                 payload.append('avatar', avatarFile); // 'avatar' phải khớp với tên trường trong multer single('avatar')
             }
 
-            await api.post('/auth/add', payload, {
+            await api.post('/users/add', payload, {
                 headers: {
                     'Content-Type': 'multipart/form-data' // Quan trọng khi gửi file
                 }
