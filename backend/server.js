@@ -19,7 +19,21 @@ const PORT = process.env.PORT || 5001;
 // Thiết lập Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+// app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+// Tách chuỗi CLIENT_URL thành một mảng các origin được phép
+const allowedOrigins = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : [];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Cho phép nếu origin nằm trong danh sách hoặc nếu không có origin (ví dụ: Postman)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origin này không được phép bởi CORS'));
+    }
+  },
+  credentials: true
+}));
 
 
 app.use('/api/auth', authRoute);
