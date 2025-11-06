@@ -1,23 +1,22 @@
-import React, { Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register.jsx";
 import Home from "./pages/Home/Home.jsx";
-const Learning = React.lazy(() => import("./pages/Learning/Learning.jsx"));
-const Vocabulary = React.lazy(() => import("./pages/User/Vocabulary.jsx"));
-const Flashcard = React.lazy(() => import("./pages/User/Flashcard.jsx"));
-const AdminHome = React.lazy(() => import("./pages/Admin/AdminHome.jsx"));
-const UserList = React.lazy(() => import("./pages/Admin/UserList.jsx"));
-const UserAdd = React.lazy(() => import("./pages/Admin/UserAdd.jsx"));
-const UserUpdate = React.lazy(() => import("./pages/Admin/UserUpdate.jsx"));
-const TopicList = React.lazy(() => import("./pages/Admin/TopicList.jsx"));
-const TopicAdd = React.lazy(() => import("./pages/Admin/TopicAdd.jsx"));
-const TopicUpdate = React.lazy(() => import("./pages/Admin/TopicUpdate.jsx"));
-const WordList = React.lazy(() => import("./pages/Admin/WordList.jsx"));
-const WordAdd = React.lazy(() => import("./pages/Admin/WordAdd.jsx"));
-const WordAddBulk = React.lazy(() => import("./pages/Admin/WordAddBulk.jsx"));
-const WordUpdate = React.lazy(() => import("./pages/Admin/WordUpdate.jsx"));
+import Learning from "./pages/Learning/Learning.jsx";
+import Vocabulary from "./pages/User/Vocabulary.jsx";
+import Flashcard from "./pages/User/Flashcard.jsx";
+import AdminHome from "./pages/Admin/AdminHome.jsx";
+import UserList from "./pages/Admin/UserList.jsx";
+import UserAdd from "./pages/Admin/UserAdd.jsx";
+import UserUpdate from "./pages/Admin/UserUpdate.jsx";
+import TopicList from "./pages/Admin/TopicList.jsx";
+import TopicAdd from "./pages/Admin/TopicAdd.jsx";
+import TopicUpdate from "./pages/Admin/TopicUpdate.jsx";
+import WordList from "./pages/Admin/WordList.jsx";
+import WordAdd from "./pages/Admin/WordAdd.jsx";
+import WordAddBulk from "./pages/Admin/WordAddBulk.jsx";
+import WordUpdate from "./pages/Admin/WordUpdate.jsx";
 import { Toaster } from "sonner";
 
 // Component Loading
