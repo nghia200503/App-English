@@ -287,16 +287,48 @@
 // // Lấy danh sách người dùng
 // const userList = async (req, res) => {
 //   try {
-//     // Tìm tất cả user và chỉ chọn các trường được yêu cầu
+//     // 1. Lấy page và limit từ query params (giống topicList)
+//     const page = parseInt(req.query.page) || 1;
+//     // Đặt limit mặc định, ví dụ 8 (bạn có thể đổi thành 5 hoặc 10)
+//     const limit = parseInt(req.query.limit) || 8;
+
+//     // 2. Tính toán skip (giống topicList)
+//     const skip = (page - 1) * limit;
+
+//     // 3. Đếm tổng số documents (giống topicList)
+//     const total = await userModel.countDocuments();
+
+//     // 4. Lấy data với pagination (kết hợp logic cũ và mới)
 //     const users = await userModel
 //       .find()
-//       .select("username displayName email avatarUrl phone role");
+//       .select("username displayName email avatarUrl phone role") // Giữ lại select từ hàm cũ
+//       .sort({ createdAt: -1 }) // Sắp xếp mới nhất trước
+//       .skip(skip)
+//       .limit(limit);
 
-//     return res.status(200).json(users);
-    
+//     // 5. Tính tổng số trang (giống topicList)
+//     const totalPages = Math.ceil(total / limit);
+
+//     // 6. Trả về kết quả với metadata (giống topicList)
+//     res.json({
+//       success: true,
+//       data: users,
+//       pagination: {
+//         currentPage: page,
+//         totalPages: totalPages,
+//         totalItems: total,
+//         itemsPerPage: limit,
+//         hasNextPage: page < totalPages,
+//         hasPrevPage: page > 1,
+//       },
+//     });
 //   } catch (error) {
 //     console.error("Lỗi khi lấy danh sách người dùng:", error);
-//     return res.status(500).json({ message: "Lỗi hệ thống" });
+//     // Trả về lỗi theo format mới
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi server khi lấy danh sách người dùng",
+//     });
 //   }
 // };
 
@@ -519,6 +551,19 @@ const loginUser = async (req, res) => {
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
     });
 
+    // Tạo đối tượng user an toàn để gửi về client
+    const userForClient = {
+      _id: user._id,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      role: user.role,
+      bio: user.bio,
+      phone: user.phone
+      // Tuyệt đối không gửi hashedPassword
+    };
+
     // Trả refresh token về trang coookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -530,7 +575,7 @@ const loginUser = async (req, res) => {
     // Trả access token về trong res
     return res
       .status(200)
-      .json({ message: `User ${user.displayName} đã đăng nhập`, accessToken });
+      .json({ message: `User ${user.displayName} đã đăng nhập`, accessToken, user: userForClient });
   } catch (error) {
     console.error("Lỗi khi gọi API đăng nhập:", error);
     return res.status(500).json({ message: "Lỗi hệ thống" });

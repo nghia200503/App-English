@@ -60,12 +60,9 @@ export const useAuthStore = create((set, get) => ({
         try {
             set({ loading: true });
 
-            const { accessToken } = await authService.login(username, password);
+            const { accessToken, user } = await authService.login(username, password);
             get().setAccessToken(accessToken);
-
-            await get().fetchMe(); // Hàm này sẽ gọi và set state.user
-
-            const user = get().user; // Lấy user vừa được fetch từ state
+            set({ user: user });
 
             if (user) {
                 toast.success("Đăng nhập thành công");
