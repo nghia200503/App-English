@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, Lock, User, Mail } from "lucide-react";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -227,13 +227,13 @@ export default function Register() {
           <div className="mt-8 text-center">
             <p className="text-gray-600">
               Đã có tài khoản?{" "}
-              <a 
-                href="/login"
+              <Link
+                to="/login"
                 className="font-bold hover:underline transition-all"
                 style={{ color: '#7159B6' }}
               >
                 Đăng nhập 
-              </a>
+              </Link>
             </p>
           </div>
         </div>

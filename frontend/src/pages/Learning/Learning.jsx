@@ -41,7 +41,7 @@ function Home() {
             <Header />
 
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto">
+            <main className="max-w-7xl pt-5 mx-auto">
                 {/* Welcome Banner */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl shadow-sm overflow-hidden mb-8">
                     <div className="grid md:grid-cols-2 gap-8 items-center p-8 md:p-12">

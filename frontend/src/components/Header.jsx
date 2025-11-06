@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { useAuthStore } from "../stores/useAuthStore";
 
@@ -7,28 +8,28 @@ export default function Header() {
 
     return (
         <header className="bg-white shadow-sm sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto ">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
-                    <a href="/learn"><img className="w-60" src={assets.logo}/></a>
+                    <Link to="/learn"><img className="w-60" src={assets.logo}/></Link>
 
                     {/* Navigation */}
                     <nav className="hidden md:flex space-x-8">
-                        <a href="/learn" className="text-gray-600 hover:text-gray-900 transition">
+                        <Link to="/learn" className="text-gray-600 hover:text-gray-900 transition">
                             Trang chủ
-                        </a>
-                        <a href="/vocabulary" className="text-gray-600 hover:text-gray-900 transition">
+                        </Link>
+                        <Link to="/vocabulary" className="text-gray-600 hover:text-gray-900 transition">
                             Học từ vựng
-                        </a>
-                        <a href="/practice" className="text-gray-600 hover:text-gray-900 transition">
+                        </Link>
+                        <Link to="/practice" className="text-gray-600 hover:text-gray-900 transition">
                             Luyện tập
-                        </a>
-                        <a href="/statistics" className="text-gray-600 hover:text-gray-900 transition">
+                        </Link>
+                        <Link to="/statistics" className="text-gray-600 hover:text-gray-900 transition">
                             Thống kê
-                        </a>
-                        <a href="/dictionary" className="text-gray-600 hover:text-gray-900 transition">
+                        </Link>
+                        <Link to="/dictionary" className="text-gray-600 hover:text-gray-900 transition">
                             Từ điển
-                        </a>
+                        </Link>
                     </nav>
 
                     {/* User Menu */}
@@ -47,12 +48,12 @@ export default function Header() {
 
                         {/* Dropdown Menu */}
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
-                            <a href="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <Link to="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                 Hồ sơ cá nhân
-                            </a>
-                            <a href="/settings" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            </Link>
+                            <Link to="/settings" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                 Cài đặt
-                            </a>
+                            </Link>
                             <button
                                 onClick={() => useAuthStore.getState().logout()}
                                 className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"

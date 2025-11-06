@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Volume2, Search } from 'lucide-react';
 import { wordService } from '../../services/wordService';
 import { topicService } from '../../services/topicService';
+import Header from '../../components/Header';
 
 export default function Vocabulary(){
   const [words, setWords] = useState([]);
@@ -104,8 +105,10 @@ export default function Vocabulary(){
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 px-4">
+      <Header />
+      
+      <div className="max-w-7xl pt-5 mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Học từ vựng</h1>
