@@ -29,27 +29,57 @@ const uploadToCloudinary = (fileBuffer, resourceType = 'auto', folder = 'words')
 // Lấy tất cả từ vựng với phân trang
 export const wordList = async (req, res) => {
   try {
-    // Lấy page và limit từ query params, mặc định page=1, limit=5
+    // --- LẤY TẤT CẢ THAM SỐ TỪ QUERY ---
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    let limit = parseInt(req.query.limit) || 10;
+    const topic = req.query.topic; // Lọc theo tên danh mục
+    const search = req.query.search; // Lọc theo từ vựng/nghĩa
     
-    // Tính toán skip
+    // Xử lý trường hợp không phân trang (dùng cho Flashcard)
+    const noPaginate = req.query.limit === 'all';
+    if (noPaginate) {
+      limit = 0; // Đặt limit = 0 để Mongoose hiểu là không giới hạn
+    }
+    
     const skip = (page - 1) * limit;
+
+    // --- TẠO QUERY ĐỘNG ---
+    const query = {};
     
-    // Đếm tổng số documents
-    const total = await wordModel.countDocuments();
+    if (topic && topic !== 'all') {
+      // Lọc theo tên danh mục (đúng với 'wordModel' của bạn)
+      query.topic = topic; 
+    }
     
-    // Lấy data với pagination
-    const words = await wordModel
-      .find()
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 }); // Sắp xếp mới nhất trước
+    if (search) {
+      // Tìm kiếm không phân biệt hoa thường
+      query.word = { $regex: search, $options: 'i' };
+      // Nếu bạn muốn tìm cả trong 'translation':
+      // query.$or = [
+      //   { word: { $regex: search, $options: 'i' } },
+      //   { translation: { $regex: search, $options: 'i' } }
+      // ];
+    }
+    // ------------------------
+
+    // Đếm tổng số documents (DÙNG QUERY)
+    const total = await wordModel.countDocuments(query);
     
-    // Tính tổng số trang
-    const totalPages = Math.ceil(total / limit);
+    // Lấy data (DÙNG QUERY)
+    const wordsQuery = wordModel
+      .find(query)
+      .sort({ createdAt: -1 });
+
+    // Chỉ áp dụng skip/limit nếu CÓ phân trang
+    if (!noPaginate) {
+      wordsQuery.skip(skip).limit(limit);
+    }
     
-    // Trả về kết quả với metadata
+    const words = await wordsQuery;
+    
+    const totalPages = noPaginate ? 1 : Math.ceil(total / limit);
+    
+    // Trả về kết quả
     res.json({
       success: true,
       data: words,
@@ -57,9 +87,9 @@ export const wordList = async (req, res) => {
         currentPage: page,
         totalPages: totalPages,
         totalItems: total,
-        itemsPerPage: limit,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
+        itemsPerPage: noPaginate ? total : limit,
+        hasNextPage: !noPaginate && page < totalPages,
+        hasPrevPage: !noPaginate && page > 1
       }
     });
   } catch (err) {

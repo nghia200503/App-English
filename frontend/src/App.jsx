@@ -18,6 +18,10 @@ import WordAdd from "./pages/Admin/WordAdd.jsx";
 import WordAddBulk from "./pages/Admin/WordAddBulk.jsx";
 import WordUpdate from "./pages/Admin/WordUpdate.jsx";
 import { Toaster } from "sonner";
+import Quiz from "./pages/User/Quiz.jsx";
+import QuizResult from "./pages/User/QuizResult.jsx";
+import Spell from "./pages/User/Spell.jsx";
+import SpellResult from "./pages/User/SpellResult.jsx";
 
 // Component Loading
 // const PageLoader = () => (
@@ -41,6 +45,10 @@ function App() {
             <Route path='/learn' element={<Learning />} />
             <Route path='/vocabulary' element={<Vocabulary />} />
             <Route path='/vocabulary/flashcard' element={<Flashcard />} />
+            <Route path='/vocabulary/quiz' element={<Quiz />} />
+            <Route path='/vocabulary/quiz/result' element={<QuizResult />} />
+            <Route path='/vocabulary/spell' element={<Spell />} />
+            <Route path='/vocabulary/spell/result' element={<SpellResult />} />
           </Route>
 
 

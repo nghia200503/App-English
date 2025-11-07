@@ -2,9 +2,14 @@ import api from "../libs/axios";
 
 export const wordService = {
     // Lấy tất cả words với phân trang
-    getAllWords: async (page = 1, limit = 5) => {
+    getAllWords: async (page = 1, limit = 9, topic = 'all', search = '') => {
         const res = await api.get('/words', {
-            params: { page, limit }
+            params: { 
+              page, 
+              limit,
+              topic,    // <-- Gửi topic
+              search    // <-- Gửi search
+            }
         });
         return res.data; // Trả về { success, data, pagination }
     },

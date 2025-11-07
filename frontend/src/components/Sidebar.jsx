@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { ChevronDown, BarChart3, ShoppingBag, Inbox, User, Settings, LogOut, WholeWord, TouchpadIcon, LucideWholeWord, WholeWordIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { assets } from '../assets/assets';
 
 const Sidebar = () => {
+
+  const { user } = useAuthStore();
+
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isEcommerceOpen, setIsEcommerceOpen] = useState(false);
 
@@ -15,7 +17,7 @@ const Sidebar = () => {
       await logout();
       navigate("/login");
     } catch (error) {
-      console.error(error); 
+      console.error(error);
     }
   }
 
@@ -25,13 +27,13 @@ const Sidebar = () => {
       {/* User Profile */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-            JD
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900">John Doe</p>
-            <p className="text-xs text-gray-500">john@example.com</p>
-          </div>
+          <img
+            src={user.avatarUrl || assets.user_avatar}
+            alt={user.username}
+            className="w-10 h-10 rounded-full object-contain"
+            onError={(e) => { e.target.src = assets.user_avatar; }}
+          />
+          <p className="text-sm font-medium text-gray-900">{user.displayName}</p>
         </div>
       </div>
 
@@ -43,7 +45,7 @@ const Sidebar = () => {
             className="w-full"
           >
             <Link to="/admin" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-              <img className='w-5 h-5' src={assets.dashboard}/>
+              <img className='w-5 h-5' src={assets.dashboard} />
               <span className="text-sm font-medium">Bảng tin</span>
             </Link>
           </button>
@@ -55,7 +57,7 @@ const Sidebar = () => {
             className="w-full"
           >
             <Link to="/admin/user-list" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-              <img className="w-5 h-5" src={assets.user_manage}/>
+              <img className="w-5 h-5" src={assets.user_manage} />
               <span className="text-sm font-medium">Quản lý người dùng</span>
             </Link>
           </button>
@@ -63,7 +65,7 @@ const Sidebar = () => {
 
         <button className="w-full">
           <Link to="/admin/topic-list" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            <img className="w-5 h-5" src={assets.topic_manage}/>
+            <img className="w-5 h-5" src={assets.topic_manage} />
             <span className="text-sm font-medium">Quản lý chủ đề</span>
           </Link>
         </button>
@@ -71,20 +73,20 @@ const Sidebar = () => {
         {/* Profile */}
         <button className="w-full">
           <Link to="/admin/word-list" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            <img className="w-5 h-5" src={assets.word_manage}/>
+            <img className="w-5 h-5" src={assets.word_manage} />
             <span className="text-sm font-medium">Quản lý từ vựng</span>
           </Link>
         </button>
 
         {/* Settings */}
         <button className="cursor-pointer w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-          <img className="w-5 h-5" src={assets.settings}/>
+          <img className="w-5 h-5" src={assets.settings} />
           <span className="text-sm font-medium">Cài đặt</span>
         </button>
 
         {/* Log Out */}
         <button onClick={handleLogout} className="cursor-pointer w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-          <img className="w-5 h-5" src={assets.logout}/>
+          <img className="w-5 h-5" src={assets.logout} />
           <span className="text-sm font-medium">Đăng xuất</span>
         </button>
       </nav>

@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Volume2, Search } from 'lucide-react';
+// Import service
 import { wordService } from '../../services/wordService';
 import { topicService } from '../../services/topicService';
+// Import components
 import Header from '../../components/Header';
+import FlashcardPopup from '../../components/FlashcardPopup';
+import QuizPopup from '../../components/QuizPopup';
+import SpellPopup from '../../components/SpellPopup';
+// Import assets
+import { assets } from '../../assets/assets';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Vocabulary(){
   const [words, setWords] = useState([]);
@@ -19,6 +27,10 @@ export default function Vocabulary(){
     hasNextPage: false,
     hasPrevPage: false
   });
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isQuizPopupOpen, setIsQuizPopupOpen] = useState(false);
+  const [isSpellPopupOpen, setIsSpellPopupOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Load learned words from localStorage on mount
   useEffect(() => {
@@ -28,20 +40,28 @@ export default function Vocabulary(){
     }
   }, []);
 
-  // Fetch words from MongoDB via API
-  useEffect(() => {
-    fetchWords();
-  }, [pagination.currentPage]);
-
-  // Fetch topics once on mount
+  // --- SỬA LẠI LOGIC FETCH ---
+  // 1. Fetch topics MỘT LẦN khi component mount
   useEffect(() => {
     fetchTopics();
   }, []);
 
+  // 2. Fetch words BẤT CỨ KHI NÀO filter (page, topic, search) thay đổi
+  useEffect(() => {
+    fetchWords();
+  }, [pagination.currentPage, selectedTopic, searchTerm]);
+  // -------------------------
+
   const fetchWords = async () => {
     try {
       setLoading(true);
-      const response = await wordService.getAllWords(pagination.currentPage, 9);
+      // Gọi service với ĐẦY ĐỦ tham số filter
+      const response = await wordService.getAllWords(
+        pagination.currentPage, 
+        pagination.itemsPerPage,
+        selectedTopic,
+        searchTerm
+      );
       
       if (response.success) {
         setWords(response.data);
@@ -56,7 +76,8 @@ export default function Vocabulary(){
 
   const fetchTopics = async () => {
     try {
-      const response = await topicService.getAllTopics(1, 100); // Get all topics
+      // Dùng getAllTopicsDropdown (từ topicService) sẽ hiệu quả hơn
+      const response = await topicService.getAllTopicsDropdown(); 
       
       if (response.success) {
         setTopics(response.data);
@@ -81,31 +102,56 @@ export default function Vocabulary(){
       } else {
         newSet.add(wordId);
       }
-      // Save to localStorage
       localStorage.setItem('learnedWords', JSON.stringify(Array.from(newSet)));
       return newSet;
     });
   };
 
-  const filteredWords = words.filter(word => {
-    const matchesSearch = word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         word.translation.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTopic = selectedTopic === 'all' || word.topic === selectedTopic;
-    return matchesSearch && matchesTopic;
-  });
+  // --- XÓA BIẾN filteredWords ---
+  // const filteredWords = words.filter(...) 
+  // Backend đã lọc, 'words' chính là dữ liệu đã lọc
+  // -------------------------------
 
-  const learnedCount = Array.from(learnedWords).filter(id => 
-    words.some(w => w._id === id)
-  ).length;
-  const notLearnedCount = filteredWords.length - learnedCount;
+  // Tính toán số từ đã học/chưa học
+  const learnedCount = words.filter(w => learnedWords.has(w._id)).length;
+  const notLearnedCount = words.length - learnedCount;
+
+  // --- TẠO HÀM HANDLER MỚI ĐỂ RESET PAGE ---
+  const handleTopicChange = (e) => {
+    setSelectedTopic(e.target.value);
+    // Khi đổi filter, quay về trang 1
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+  
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    // Khi đổi filter, quay về trang 1
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+  // -----------------------------------------
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, currentPage: newPage }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleStartLearn = (selectedTopic) => {
+    setIsPopupOpen(false);
+    navigate('/vocabulary/flashcard');
+  };
+
+  const handleStartQuiz = () => {
+    setIsQuizPopupOpen(false);
+    navigate('/vocabulary/quiz');
+  };
+
+  const handleStartSpell = () => {
+    setIsSpellPopupOpen(false);
+    navigate('/vocabulary/spell'); // Điều hướng đến trang Spell
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       
       <div className="max-w-7xl pt-5 mx-auto">
@@ -117,17 +163,15 @@ export default function Vocabulary(){
 
         {/* Learning Mode Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <div onClick={() => setIsPopupOpen(true)} className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-              </svg>
+              <img className='w-6 h-6' src={assets.flashcard}/>
             </div>
             <h3 className="text-xl font-semibold mb-2">Flashcard</h3>
             <p className="text-blue-100 text-sm">Học từ vựng qua thẻ ghi nhớ</p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <div onClick={() => setIsQuizPopupOpen(true)} className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -138,7 +182,7 @@ export default function Vocabulary(){
             <p className="text-green-100 text-sm">Kiểm tra kiến thức</p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <div onClick={() => setIsSpellPopupOpen(true)} className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -173,7 +217,7 @@ export default function Vocabulary(){
                   type="text"
                   placeholder="Nhập từ khóa..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange} // <-- SỬA DÙNG HANDLER MỚI
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -186,9 +230,10 @@ export default function Vocabulary(){
               </label>
               <select
                 value={selectedTopic}
-                onChange={(e) => setSelectedTopic(e.target.value)}
+                onChange={handleTopicChange} // <-- SỬA DÙNG HANDLER MỚI
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
+                {/* Dùng totalItems từ pagination để đếm tổng */}
                 <option value="all">Tất cả ({pagination.totalItems})</option>
                 {topics.map(topic => (
                   <option key={topic._id} value={topic.nameTopic}>
@@ -215,7 +260,8 @@ export default function Vocabulary(){
         {/* Words Display */}
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            Hiển thị {filteredWords.length} từ vựng
+            {/* Dùng 'words.length' (số từ trên trang này) */}
+            Hiển thị {words.length} từ vựng
           </h2>
         </div>
 
@@ -224,13 +270,14 @@ export default function Vocabulary(){
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             <p className="mt-4 text-gray-600">Đang tải từ vựng...</p>
           </div>
-        ) : filteredWords.length === 0 ? (
+        ) : words.length === 0 ? ( // SỬA: Dùng 'words.length'
           <div className="text-center py-12 bg-white rounded-xl">
             <p className="text-gray-500 text-lg">Không tìm thấy từ vựng nào</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWords.map((word) => (
+            {/* SỬA: Map qua 'words' */}
+            {words.map((word) => (
               <div
                 key={word._id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
@@ -249,7 +296,7 @@ export default function Vocabulary(){
 
                 {/* Content */}
                 <div className="p-6">
-                  {/* Word and Audio */}
+                  {/* ... (phần còn lại của card giữ nguyên) ... */}
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-2xl font-bold text-gray-800">{word.word}</h3>
                     <button
@@ -260,26 +307,16 @@ export default function Vocabulary(){
                       <Volume2 className="w-5 h-5 text-blue-500" />
                     </button>
                   </div>
-
-                  {/* Pronunciation */}
                   <p className="text-gray-500 text-sm mb-3">{word.pronunciation}</p>
-
-                  {/* Topic Badge */}
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-xs rounded-full mb-3">
                     {word.topic}
                   </span>
-
-                  {/* Translation */}
                   <p className="text-gray-800 font-medium mb-3">{word.translation}</p>
-
-                  {/* Example */}
                   {word.example && (
                     <div className="bg-gray-50 rounded-lg p-3 mb-4">
                       <p className="text-sm text-gray-600 italic">{word.example}</p>
                     </div>
                   )}
-
-                  {/* Action Button */}
                   <button
                     onClick={() => toggleLearned(word._id)}
                     className={`w-full py-2 rounded-lg font-medium transition-colors ${
@@ -348,6 +385,25 @@ export default function Vocabulary(){
             </button>
           </div>
         )}
+
+        {/* Popup (component này đã đúng) */}
+        <FlashcardPopup 
+          isOpen={isPopupOpen}
+          onClose={() => setIsPopupOpen(false)}
+          onStartLearn={handleStartLearn}
+        />
+
+        <QuizPopup
+          isOpen={isQuizPopupOpen}
+          onClose={() => setIsQuizPopupOpen(false)}
+          onStartQuiz={handleStartQuiz}
+        />
+
+        <SpellPopup
+          isOpen={isSpellPopupOpen}
+          onClose={() => setIsSpellPopupOpen(false)}
+          onStartSpell={handleStartSpell}
+        />
       </div>
     </div>
   );

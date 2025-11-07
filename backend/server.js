@@ -41,6 +41,7 @@ app.use(protectedRoute);
 app.use('/api/users', userRoute);
 app.use('/api/topics', topicRoute);
 app.use('/api/words', wordRoute);
+
 // Public route cho phép truy cập từ bên ngoài
 
 // Private route, cần xác thực mới truy cập được
