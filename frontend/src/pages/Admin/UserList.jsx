@@ -47,7 +47,7 @@ export default function UserList() {
     const handleDelete = async (userId) => {
         try {
             setDeleting(true); // Bắt đầu xóa
-            await api.delete(`/users/users/${userId}`); // Vẫn dùng api trực tiếp vì authService không có
+            await api.delete(`/delete/${userId}`); // Vẫn dùng api trực tiếp vì authService không có
             toast.success("Xóa người dùng thành công");
             
             // Logic tải lại danh sách sau khi xóa

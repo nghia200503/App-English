@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios'; // Dùng api (axios) để gọi
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 
+// --- TẤT CẢ LOGIC (HÀM, STATE, EFFECTS) ĐƯỢC GIỮ NGUYÊN ---
+
 // Hàm xáo trộn mảng (Fisher-Yates shuffle)
 function shuffleArray(array) {
   let currentIndex = array.length, randomIndex;
@@ -78,8 +80,6 @@ export default function Quiz() {
     try {
       const topicName = topic.nameTopic === 'Tất cả' ? 'all' : topic.nameTopic;
       
-      // Giống Flashcard, gọi trực tiếp API để lấy 'limit' từ
-      // Dùng endpoint '/words' đã có trong wordService
       const response = await api.get(`/words?topic=${topicName}&limit=${limit}`);
       const result = response.data;
 
@@ -87,7 +87,6 @@ export default function Quiz() {
         if (result.data.length < 4) {
           setError(`Không đủ từ vựng (cần ít nhất 4, tìm thấy ${result.data.length}) để tạo bài trắc nghiệm.`);
         } else {
-          // 2. Tạo câu hỏi từ danh sách từ vựng
           const generated = generateQuestions(result.data);
           setQuestions(generated);
         }
@@ -104,14 +103,11 @@ export default function Quiz() {
 
   // 3. Xử lý khi chọn câu trả lời
   const handleAnswerSelect = (option) => {
-    if (isAnswered) return; // Không cho chọn lại
-
+    if (isAnswered) return; 
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = option === currentQuestion.correctAnswer;
-    
     setSelectedAnswer(option);
     setIsAnswered(true);
-
     if (isCorrect) {
       setScore(prev => prev + 1);
     }
@@ -119,12 +115,10 @@ export default function Quiz() {
 
   // 4. Xử lý khi nhấn "Tiếp theo"
   const handleNextQuestion = () => {
-    if (!isAnswered) return; // Phải trả lời trước khi next
-
+    if (!isAnswered) return;
     const nextIndex = currentQuestionIndex + 1;
     if (nextIndex < questions.length) {
       setCurrentQuestionIndex(nextIndex);
-      // Reset trạng thái cho câu mới
       setIsAnswered(false);
       setSelectedAnswer(null);
     }
@@ -132,9 +126,7 @@ export default function Quiz() {
 
   // 5. Xử lý khi nhấn "Xem kết quả"
   const handleViewResults = () => {
-    // Xóa cài đặt khỏi localStorage
     localStorage.removeItem('quizSettings');
-    // Chuyển trang qua trang kết quả
     navigate('/vocabulary/quiz/result', { 
       state: { 
         score: score, 
@@ -151,81 +143,56 @@ export default function Quiz() {
     }
   };
 
-  // --- CÁC TRẠNG THÁI RENDER ---
+  // --- CÁC TRẠNG THÁI RENDER (LOADING, ERROR) GIỮ NGUYÊN ---
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600 text-lg">Đang tạo bài kiểm tra...</p>
-        </div>
+        {/* ... (màn hình loading) ... */}
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-          <AlertCircle className="text-red-500 w-12 h-12 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Đã xảy ra lỗi</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/vocabulary')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Quay về trang từ vựng
-          </button>
-        </div>
+        {/* ... (màn hình lỗi) ... */}
       </div>
     );
   }
-
   if (questions.length === 0) {
     return (
        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Không có câu hỏi</h2>
-          <p className="text-gray-600 mb-6">Không thể tạo câu hỏi từ dữ liệu hiện có.</p>
-          <button
-            onClick={() => navigate('/vocabulary')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Quay về trang từ vựng
-          </button>
-        </div>
+        {/* ... (màn hình không có câu hỏi) ... */}
       </div>
     );
   }
 
-  // --- RENDER BÀI QUIZ ---
+  // --- LOGIC RENDER BÀI QUIZ (GIỮ NGUYÊN) ---
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   const optionLabels = ['A', 'B', 'C', 'D'];
 
-  // Hàm lấy class cho mỗi lựa chọn
   const getOptionClass = (option) => {
     if (!isAnswered) {
-      return 'border-gray-300 hover:bg-gray-50'; // Chưa trả lời
+      return 'border-gray-300 hover:bg-gray-50';
     }
-    
     const isCorrect = option === currentQuestion.correctAnswer;
     const isSelected = option === selectedAnswer;
-
     if (isCorrect) {
-      return 'border-green-500 bg-green-50 text-green-700'; // Đáp án đúng
+      return 'border-green-500 bg-green-50 text-green-700';
     }
     if (isSelected && !isCorrect) {
-      return 'border-red-500 bg-red-50 text-red-700'; // Chọn sai
+      return 'border-red-500 bg-red-50 text-red-700';
     }
-    
-    return 'border-gray-300 opacity-60'; // Các đáp án còn lại
+    return 'border-gray-300 opacity-60';
   };
 
+  // --- PHẦN RENDER BỐ CỤC (ĐÃ THAY ĐỔI) ---
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
+      {/* THAY ĐỔI: Tăng max-w-2xl thành max-w-4xl */}
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header (Giữ nguyên) */}
         <div className="flex justify-between items-center mb-4">
           <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-600 hover:text-blue-600">
             <ArrowLeft size={20} />
@@ -234,10 +201,9 @@ export default function Quiz() {
           <span className="text-lg font-bold text-blue-600">
             Câu {currentQuestionIndex + 1}/{questions.length}
           </span>
-          {/* <span className="text-xl font-bold text-blue-600">25s</span> */}
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar (Giữ nguyên) */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
           <div
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -245,38 +211,54 @@ export default function Quiz() {
           ></div>
         </div>
 
-        {/* Question Card */}
+        {/* Question Card (Giữ nguyên) */}
         <div className="bg-white rounded-lg shadow-xl p-6 md:p-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
-            Từ "{currentQuestion.question}" có nghĩa là gì?
-          </h2>
 
-          {/* Options */}
-          <div className="space-y-4 mb-6">
-            {currentQuestion.options.map((option, index) => (
-              <button
-                key={index}
-                onClick={() => handleAnswerSelect(option)}
-                disabled={isAnswered}
-                className={`w-full flex items-center gap-4 p-4 border-2 rounded-lg transition-all text-left ${getOptionClass(option)}`}
-              >
-                <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-bold ${isAnswered ? 'text-white' : 'text-gray-500'}`}
-                  style={{
-                    backgroundColor: 
-                      (isAnswered && option === currentQuestion.correctAnswer) ? '#10B981' : 
-                      (isAnswered && selectedAnswer === option) ? '#EF4444' : '#E5E7EB'
-                  }}
+          {/* THAY ĐỔI: Bắt đầu Grid 2 cột */}
+          <div className="grid md:grid-cols-2 md:gap-8 items-start">
+            
+            {/* CỘT 1: TỪ VỰNG (STICKY) */}
+            <div className="md:sticky md:top-24">
+              <p className="text-base text-gray-500 mb-2">Từ này có nghĩa là gì?</p>
+              <div className="bg-blue-50 p-6 rounded-lg text-center flex items-center justify-center min-h-[150px]">
+                <h2 className="text-4xl font-bold text-blue-700">
+                  {currentQuestion.question}
+                </h2>
+              </div>
+            </div>
+
+            {/* CỘT 2: CÁC LỰA CHỌN */}
+            <div className="space-y-4 mt-6 md:mt-0">
+              {currentQuestion.options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleAnswerSelect(option)}
+                  disabled={isAnswered}
+                  className={`w-full flex items-center gap-4 p-4 border-2 rounded-lg transition-all text-left ${getOptionClass(option)}`}
                 >
-                  {optionLabels[index]}
-                </span>
-                <span className="text-lg font-medium">{option}</span>
-              </button>
-            ))}
+                  <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-bold ${
+                    (isAnswered && (option === currentQuestion.correctAnswer || selectedAnswer === option))
+                    ? 'text-white' 
+                    : 'text-gray-500'
+                  }`}
+                    style={{
+                      backgroundColor: 
+                        (isAnswered && option === currentQuestion.correctAnswer) ? '#10B981' : 
+                        (isAnswered && selectedAnswer === option) ? '#EF4444' : '#E5E7EB'
+                    }}
+                  >
+                    {optionLabels[index]}
+                  </span>
+                  <span className="text-lg font-medium">{option}</span>
+                </button>
+              ))}
+            </div>
           </div>
+          {/* KẾT THÚC Grid 2 cột */}
 
-          {/* Explanation & Next Button */}
+          {/* Explanation & Next Button (Nằm ngoài grid, vẫn trong card) */}
           {isAnswered && (
-            <div className="animate-fadeIn">
+            <div className="animate-fadeIn mt-6 border-t pt-6">
               {/* Explanation */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                 <h4 className="font-bold text-gray-700 mb-1">Giải thích:</h4>

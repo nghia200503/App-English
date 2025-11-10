@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { assets } from '../../assets/assets';
 import Header from '../../components/Header';
+import { BookOpen } from 'lucide-react';
 
 function Home() {
     const navigate = useNavigate();
@@ -180,7 +181,7 @@ function Home() {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <div className="flex items-center space-x-3 mb-3">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <img className='w-5 h-5' src={assets.open_book}/>
+                                <BookOpen size={25} color=""/>
                             </div>
                             <div>
                                 <p className="text-sm text-gray-600">Từ đã học</p>

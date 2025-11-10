@@ -1,28 +1,29 @@
+// // components/ListenPopup.jsx
 // import { useState, useEffect } from 'react';
-// import { X, CheckSquare, AlertCircle } from 'lucide-react';
+// import { X, Headphones, AlertCircle } from 'lucide-react'; // Thay đổi icon
 // import { topicService } from '../services/topicService'; 
 // import { toast } from 'sonner';
 
-// // Tạo một đối tượng 'Tất cả' để dùng
+// // Tạo một đối tượng 'Tất cả'
 // const allTopicsOption = { 
 //   _id: 'all', 
 //   nameTopic: 'Tất cả', 
 //   meaning: 'Bao gồm tất cả chủ đề' 
 // };
 
-// export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
-//   const [topics, setTopics] = useState([allTopicsOption]); // Bắt đầu với 'Tất cả'
-//   const [selectedTopic, setSelectedTopic] = useState(allTopicsOption); // Mặc định chọn 'Tất cả'
-//   const [questionLimit, setQuestionLimit] = useState(10); // Mặc định là 10 câu
+// // Props: đổi onStartSpell -> onStartListen
+// export default function ListenPopup({ isOpen, onClose, onStartListen }) {
+//   const [topics, setTopics] = useState([allTopicsOption]);
+//   const [selectedTopic, setSelectedTopic] = useState(allTopicsOption);
+//   const [wordLimit, setWordLimit] = useState(10); // Đặt mặc định là 10 (phổ biến hơn cho nghe)
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState(null);
 
 //   useEffect(() => {
 //     if (isOpen) {
 //       fetchTopics();
-//       // Reset về mặc định khi mở
 //       setSelectedTopic(allTopicsOption);
-//       setQuestionLimit(10);
+//       setWordLimit(10); // Reset về 10
 //     }
 //   }, [isOpen]);
 
@@ -31,9 +32,7 @@
 //     setError(null);
 //     try {
 //       const response = await topicService.getAllTopicsDropdown();
-      
 //       if (response.success && response.data) {
-//         // Thêm 'Tất cả' vào đầu danh sách
 //         setTopics([allTopicsOption, ...response.data]);
 //       } else {
 //         setError('Không thể tải danh sách danh mục');
@@ -47,22 +46,27 @@
 //     }
 //   };
 
-//   const handleStartQuiz = () => {
+//   // Đổi tên hàm
+//   const handleStartListen = () => {
 //     if (selectedTopic) {
-//       // Lưu cài đặt quiz vào localStorage
-//       localStorage.setItem('quizSettings', JSON.stringify({ 
+//       // Đổi key localStorage
+//       localStorage.setItem('listenSettings', JSON.stringify({ 
 //         topic: selectedTopic, 
-//         limit: questionLimit // Lưu số lượng câu hỏi
+//         limit: wordLimit 
 //       }));
       
-//       if (onStartQuiz) {
-//         onStartQuiz(); // Gọi callback (từ Vocabulary.jsx) để chuyển trang
+//       // Đổi tên prop
+//       if (onStartListen) {
+//         onStartListen(); // Chuyển trang
 //       }
 //       onClose(); // Đóng popup
 //     }
 //   };
 
 //   if (!isOpen) return null;
+
+//   // Thay đổi theme màu
+//   const themeColor = "purple"; 
 
 //   return (
 //     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -75,24 +79,27 @@
 //           >
 //             <X size={24} />
 //           </button>
-//           <h2 className="text-2xl font-bold mb-2 text-center">Kiểm tra Trắc nghiệm</h2>
-//           <p className="text-gray-600 text-center">Chọn danh mục và số lượng câu hỏi</p>
+//           {/* Thay đổi text */}
+//           <h2 className="text-2xl font-bold mb-2 text-center">Nghe phát âm</h2>
+//           <p className="text-gray-600 text-center">Luyện tập nghe và nhận biết từ vựng</p>
 //         </div>
 
 //         {/* Content */}
 //         <div className="p-6">
 //           <div className="text-center mb-6">
-//             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-//               <CheckSquare className="text-green-600" size={32} />
+//             <div className={`inline-flex items-center justify-center w-16 h-16 bg-${themeColor}-100 rounded-full mb-4`}>
+//               {/* Thay đổi icon */}
+//               <Headphones className={`text-${themeColor}-600`} size={32} />
 //             </div>
-//             <h3 className="text-xl font-semibold mb-2">Cài đặt bài kiểm tra</h3>
-//             <p className="text-gray-600">Tùy chỉnh nội dung kiểm tra</p>
+//             {/* Thay đổi text */}
+//             <h3 className="text-xl font-semibold mb-2">Cài đặt luyện nghe</h3>
+//             <p className="text-gray-600">Chọn danh mục và số lượng từ</p>
 //           </div>
 
-//           {/* Hiển thị lỗi (nếu có) */}
+//           {/* Lỗi (nếu có) - Giữ nguyên */}
 //           {error && (
 //             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-//               <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+//               <AlertCircle className={`text-red-600 flex-shrink-0 mt-0.5`} size={20} />
 //               <div>
 //                 <p className="text-red-800 font-medium">Có lỗi xảy ra</p>
 //                 <p className="text-red-600 text-sm">{error}</p>
@@ -100,14 +107,14 @@
 //             </div>
 //           )}
 
-//           {/* Dropdown chọn chủ đề */}
+//           {/* Chọn chủ đề - Giữ nguyên logic <select> */}
 //           <div className="mb-6">
 //             <label className="block text-sm font-medium text-gray-700 mb-2">
 //               Danh mục
 //             </label>
 //             {loading ? (
 //               <div className="text-center py-8">
-//                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-2"></div>
+//                 <div className={`inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-${themeColor}-600 mb-2`}></div>
 //                 <p className="text-gray-600 text-sm">Đang tải danh mục...</p>
 //               </div>
 //             ) : (
@@ -117,10 +124,9 @@
 //                   const topic = topics.find(t => t._id === e.target.value);
 //                   setSelectedTopic(topic || allTopicsOption); 
 //                 }}
-//                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-600 transition"
-//                 disabled={topics.length <= 1} // <= 1 vì luôn có 'Tất cả'
+//                 className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-${themeColor}-600 transition`}
+//                 disabled={topics.length <= 1}
 //               >
-//                 {/* <option value="">Chọn danh mục</option> */}
 //                 {topics.map((topic) => (
 //                   <option key={topic._id} value={topic._id}>
 //                     {topic.nameTopic} {topic._id !== 'all' ? `- ${topic.meaning}` : ''}
@@ -130,23 +136,23 @@
 //             )}
 //           </div>
 
-//           {/* Chọn số lượng câu hỏi */}
+//           {/* Chọn số lượng từ - Giữ nguyên logic 4 nút */}
 //           <div className="mb-6">
 //             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Số lượng câu hỏi
+//               Số lượng từ
 //             </label>
-//             <div className="grid grid-cols-3 gap-2">
-//               {[10, 20, 30].map((count) => (
+//             <div className="grid grid-cols-4 gap-2">
+//               {[5, 10, 20, 'all'].map((count) => (
 //                 <button
 //                   key={count}
-//                   onClick={() => setQuestionLimit(count)}
+//                   onClick={() => setWordLimit(count)}
 //                   className={`px-4 py-3 rounded-lg border-2 font-medium transition ${
-//                     questionLimit === count
-//                       ? 'bg-green-600 text-white border-green-600'
+//                     wordLimit === count
+//                       ? `bg-${themeColor}-600 text-white border-${themeColor}-600`
 //                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
 //                   }`}
 //                 >
-//                   {count} câu
+//                   {count === 'all' ? 'Tất cả' : count}
 //                 </button>
 //               ))}
 //             </div>
@@ -161,11 +167,11 @@
 //               Quay lại
 //             </button>
 //             <button
-//               onClick={handleStartQuiz}
+//               onClick={handleStartListen} // Đổi hàm
 //               disabled={!selectedTopic || loading}
-//               className="flex-1 px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+//               className={`flex-1 px-6 py-3 bg-${themeColor}-600 text-white font-medium rounded-lg hover:bg-${themeColor}-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed`}
 //             >
-//               Bắt đầu
+//               Bắt đầu luyện nghe {/* Đổi text */}
 //             </button>
 //           </div>
 //         </div>
@@ -173,10 +179,9 @@
 //     </div>
 //   );
 // }
-// src/components/QuizPopup.jsx
-
+// components/ListenPopup.jsx
 import { useState, useEffect } from 'react';
-import { X, CheckSquare, AlertCircle } from 'lucide-react';
+import { X, Headphones, AlertCircle } from 'lucide-react';
 import { topicService } from '../services/topicService'; 
 import { toast } from 'sonner';
 
@@ -187,15 +192,15 @@ const allTopicsOption = {
   wordCount: 0 // Sẽ được cập nhật
 };
 
-export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
+export default function ListenPopup({ isOpen, onClose, onStartListen }) {
   const [topics, setTopics] = useState([allTopicsOption]);
   const [selectedTopic, setSelectedTopic] = useState(allTopicsOption);
-  const [questionLimit, setQuestionLimit] = useState('10'); // State giờ có thể là SỐ hoặc 'all'
+  const [wordLimit, setWordLimit] = useState('10'); // State giờ có thể là SỐ hoặc 'all'
   const [maxWordsInTopic, setMaxWordsInTopic] = useState(0); // State mới
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  const themeColor = "green"; // Theme cho Quiz
+  const themeColor = "purple"; // Theme cho Listen
 
   useEffect(() => {
     if (isOpen) {
@@ -216,9 +221,7 @@ export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
         setTopics([allTopicWithCount, ...topicsFromServer]);
         setSelectedTopic(allTopicWithCount);
         setMaxWordsInTopic(totalCount);
-        
-        // Mặc định 10, hoặc max nếu max < 10
-        setQuestionLimit(totalCount > 0 ? Math.min(10, totalCount).toString() : '10');
+        setWordLimit(totalCount > 0 ? Math.min(10, totalCount).toString() : '10');
 
       } else {
         setError('Không thể tải danh sách danh mục');
@@ -239,36 +242,36 @@ export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
     const newMax = topic.wordCount || 0;
     setMaxWordsInTopic(newMax);
 
-    if (questionLimit !== 'all' && newMax > 0 && parseInt(questionLimit) > newMax) {
-      setQuestionLimit(newMax.toString());
-    } else if (newMax === 0 && questionLimit !== 'all') {
-      setQuestionLimit('10');
+    if (wordLimit !== 'all' && newMax > 0 && parseInt(wordLimit) > newMax) {
+      setWordLimit(newMax.toString());
+    } else if (newMax === 0 && wordLimit !== 'all') {
+      setWordLimit('10');
     }
   };
 
   const handleLimitChange = (e) => {
     let value = e.target.value;
     if (value === '') {
-      setQuestionLimit('');
+      setWordLimit('');
       return;
     }
     let numValue = parseInt(value);
     if (isNaN(numValue) || numValue < 1) numValue = 1;
     if (maxWordsInTopic > 0 && numValue > maxWordsInTopic) numValue = maxWordsInTopic;
-    setQuestionLimit(numValue.toString());
+    setWordLimit(numValue.toString());
   };
-  
-  const handleStartQuiz = () => {
-    const finalLimit = (questionLimit === '' || parseInt(questionLimit) === 0) ? '10' : questionLimit;
+
+  const handleStartListen = () => {
+    const finalLimit = (wordLimit === '' || parseInt(wordLimit) === 0) ? '10' : wordLimit;
     
     if (selectedTopic) {
-      localStorage.setItem('quizSettings', JSON.stringify({ 
+      localStorage.setItem('listenSettings', JSON.stringify({ 
         topic: selectedTopic, 
-        limit: finalLimit
+        limit: finalLimit 
       }));
       
-      if (onStartQuiz) {
-        onStartQuiz();
+      if (onStartListen) {
+        onStartListen();
       }
       onClose();
     }
@@ -284,23 +287,23 @@ export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
           <button onClick={onClose} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-lg transition">
             <X size={24} />
           </button>
-          <h2 className="text-2xl font-bold mb-2 text-center">Kiểm tra Trắc nghiệm</h2>
-          <p className="text-gray-600 text-center">Chọn danh mục và số lượng câu hỏi</p>
+          <h2 className="text-2xl font-bold mb-2 text-center">Nghe phát âm</h2>
+          <p className="text-gray-600 text-center">Luyện tập nghe và nhận biết từ vựng</p>
         </div>
 
         {/* Content */}
         <div className="p-6">
           <div className="text-center mb-6">
             <div className={`inline-flex items-center justify-center w-16 h-16 bg-${themeColor}-100 rounded-full mb-4`}>
-              <CheckSquare className={`text-${themeColor}-600`} size={32} />
+              <Headphones className={`text-${themeColor}-600`} size={32} />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Cài đặt bài kiểm tra</h3>
-            <p className="text-gray-600">Tùy chỉnh nội dung kiểm tra</p>
+            <h3 className="text-xl font-semibold mb-2">Cài đặt luyện nghe</h3>
+            <p className="text-gray-600">Chọn danh mục và số lượng từ</p>
           </div>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+              <AlertCircle className={`text-red-600 flex-shrink-0 mt-0.5`} size={20} />
               <div>
                 <p className="text-red-800 font-medium">Có lỗi xảy ra</p>
                 <p className="text-red-600 text-sm">{error}</p>
@@ -315,7 +318,7 @@ export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
             </label>
             {loading ? (
               <div className="text-center py-8">
-                 <div className={`inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-${themeColor}-600 mb-2`}></div>
+                <div className={`inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-${themeColor}-600 mb-2`}></div>
                 <p className="text-gray-600 text-sm">Đang tải danh mục...</p>
               </div>
             ) : (
@@ -327,22 +330,22 @@ export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
               >
                 {topics.map((topic) => (
                   <option key={topic._id} value={topic._id}>
-                     {topic.nameTopic} {topic._id !== 'all' ? `- ${topic.meaning}` : `(${topic.wordCount} từ)`}
+                    {topic.nameTopic} {topic._id !== 'all' ? `- ${topic.meaning}` : `(${topic.wordCount} từ)`}
                   </option>
                 ))}
               </select>
             )}
           </div>
 
-          {/* --- THAY ĐỔI: Chọn số lượng câu hỏi --- */}
+          {/* --- THAY ĐỔI: Chọn số lượng từ --- */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Số lượng câu hỏi
+              Số lượng từ
             </label>
             <div className="grid grid-cols-3 gap-2">
               <input
                 type="number"
-                value={questionLimit === 'all' ? maxWordsInTopic : questionLimit}
+                value={wordLimit === 'all' ? maxWordsInTopic : wordLimit}
                 onChange={handleLimitChange}
                 onBlur={handleLimitChange}
                 min="1"
@@ -351,10 +354,10 @@ export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
                 className={`col-span-2 w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-${themeColor}-600 transition disabled:bg-gray-50`}
               />
               <button
-                onClick={() => setQuestionLimit('all')}
+                onClick={() => setWordLimit('all')}
                 disabled={loading || maxWordsInTopic === 0}
                 className={`px-4 py-3 rounded-lg border-2 font-medium transition ${
-                  questionLimit === 'all'
+                  wordLimit === 'all'
                     ? `bg-${themeColor}-600 text-white border-${themeColor}-600`
                     : `bg-white text-gray-700 border-gray-300 hover:bg-gray-50`
                 } disabled:opacity-50`}
@@ -379,11 +382,11 @@ export default function QuizPopup({ isOpen, onClose, onStartQuiz }) {
               Quay lại
             </button>
             <button
-              onClick={handleStartQuiz}
+              onClick={handleStartListen}
               disabled={!selectedTopic || loading || maxWordsInTopic === 0}
               className={`flex-1 px-6 py-3 bg-${themeColor}-600 text-white font-medium rounded-lg hover:bg-${themeColor}-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed`}
             >
-              Bắt đầu
+              Bắt đầu luyện nghe
             </button>
           </div>
         </div>

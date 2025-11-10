@@ -9,8 +9,8 @@ router.get("/me", authMe);
 
 router.get("/list", userList);
 router.post('/add', upload.single('avatar'), addUser);
-router.get("/users/:id", getUser);
-router.put("/users/:id", upload.single('avatar'), updateUser);
-router.delete("/users/:id", deleteUser);
+router.get("/:id", getUser);
+router.put("/update/:id", upload.single('avatar'), updateUser);
+router.delete("/delete/:id", deleteUser);
 
 export default router;

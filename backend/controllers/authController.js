@@ -560,8 +560,12 @@ const loginUser = async (req, res) => {
       avatarUrl: user.avatarUrl,
       role: user.role,
       bio: user.bio,
-      phone: user.phone
-      // Tuyệt đối không gửi hashedPassword
+      phone: user.phone,
+      createdAt: user.createdAt,
+      dob: user.dob,
+      address: user.address,
+      occupation: user.occupation,
+      learningGoal: user.learningGoal
     };
 
     // Trả refresh token về trang coookie
@@ -864,8 +868,10 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, displayName, phone, role, bio, password } =
-      req.body;
+    const { 
+        username, email, displayName, phone, role, bio, password,
+        dob, address, occupation, learningGoal 
+    } = req.body;
     const file = req.file; // Lấy file từ multer
 
     // Kiểm tra user tồn tại
@@ -928,6 +934,14 @@ const updateUser = async (req, res) => {
     if (phone !== undefined) user.phone = phone;
     if (role) user.role = role;
     if (bio !== undefined) user.bio = bio;
+    if (dob !== undefined) {
+        // Nếu dob là chuỗi rỗng (falsy) thì set là null
+        // Nếu dob có giá trị, thì mới tạo new Date()
+        user.dob = dob ? new Date(dob) : null;
+    }
+    if (address !== undefined) user.address = address;
+    if (occupation !== undefined) user.occupation = occupation;
+    if (learningGoal !== undefined) user.learningGoal = learningGoal;
 
     // 5. Cập nhật mật khẩu nếu có
     if (password) {
@@ -939,7 +953,7 @@ const updateUser = async (req, res) => {
     // Trả về thông tin user đã cập nhật
     const updatedUser = await userModel
       .findById(id)
-      .select("username displayName email avatarUrl phone role bio");
+      .select("username displayName email avatarUrl phone role bio createdAt dob address occupation learningGoal");
 
     return res.status(200).json({
       message: "Cập nhật người dùng thành công",

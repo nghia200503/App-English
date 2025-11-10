@@ -22,6 +22,9 @@ import Quiz from "./pages/User/Quiz.jsx";
 import QuizResult from "./pages/User/QuizResult.jsx";
 import Spell from "./pages/User/Spell.jsx";
 import SpellResult from "./pages/User/SpellResult.jsx";
+import Listen from "./pages/User/Listen.jsx";
+import ListenResult from "./pages/User/ListenResult.jsx";
+import Profile from "./pages/User/Profile.jsx";
 
 // Component Loading
 // const PageLoader = () => (
@@ -43,12 +46,15 @@ function App() {
           <Route element={<ProtectedRoute />}>
             {/* Trang user */}
             <Route path='/learn' element={<Learning />} />
+            <Route path='/profile' element={<Profile />} />
             <Route path='/vocabulary' element={<Vocabulary />} />
             <Route path='/vocabulary/flashcard' element={<Flashcard />} />
             <Route path='/vocabulary/quiz' element={<Quiz />} />
             <Route path='/vocabulary/quiz/result' element={<QuizResult />} />
             <Route path='/vocabulary/spell' element={<Spell />} />
             <Route path='/vocabulary/spell/result' element={<SpellResult />} />
+            <Route path='/vocabulary/listen' element={<Listen />} />
+            <Route path='/vocabulary/listen/result' element={<ListenResult />} />
           </Route>
 
 

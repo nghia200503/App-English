@@ -18,6 +18,9 @@ import check from './check.png';
 import time from './time.png';
 import flashcard from './flashcard.png';
 import logo from './logo.png';
+import question from './question.png';  
+import edit from './edit.png';
+import headphone from './headphone.png';
 
 export const assets ={
     dashboard,
@@ -39,5 +42,8 @@ export const assets ={
     check,
     time,
     flashcard,
-    logo
+    logo,
+    question,
+    edit,
+    headphone
 }

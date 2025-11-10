@@ -8,6 +8,7 @@ import Header from '../../components/Header';
 import FlashcardPopup from '../../components/FlashcardPopup';
 import QuizPopup from '../../components/QuizPopup';
 import SpellPopup from '../../components/SpellPopup';
+import ListenPopup from '../../components/ListenPopup';
 // Import assets
 import { assets } from '../../assets/assets';
 import { Link, useNavigate } from 'react-router-dom';
@@ -30,6 +31,7 @@ export default function Vocabulary(){
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isQuizPopupOpen, setIsQuizPopupOpen] = useState(false);
   const [isSpellPopupOpen, setIsSpellPopupOpen] = useState(false);
+  const [isListenPopupOpen, setIsListenPopupOpen] = useState(false);
   const navigate = useNavigate();
 
   // Load learned words from localStorage on mount
@@ -147,7 +149,12 @@ export default function Vocabulary(){
 
   const handleStartSpell = () => {
     setIsSpellPopupOpen(false);
-    navigate('/vocabulary/spell'); // Điều hướng đến trang Spell
+    navigate('/vocabulary/spell');
+  };
+
+  const handleStartListen = () => {
+    setIsListenPopupOpen(false);
+    navigate('/vocabulary/listen');
   };
 
   return (
@@ -163,7 +170,7 @@ export default function Vocabulary(){
 
         {/* Learning Mode Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div onClick={() => setIsPopupOpen(true)} className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <div onClick={() => setIsPopupOpen(true)} className="bg-primary-blue rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
               <img className='w-6 h-6' src={assets.flashcard}/>
             </div>
@@ -171,32 +178,25 @@ export default function Vocabulary(){
             <p className="text-blue-100 text-sm">Học từ vựng qua thẻ ghi nhớ</p>
           </div>
 
-          <div onClick={() => setIsQuizPopupOpen(true)} className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <div onClick={() => setIsQuizPopupOpen(true)} className="bg-primary-green rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+              <img className='w-6 h-6' src={assets.question}/>
             </div>
             <h3 className="text-xl font-semibold mb-2">Trắc nghiệm</h3>
             <p className="text-green-100 text-sm">Kiểm tra kiến thức</p>
           </div>
 
-          <div onClick={() => setIsSpellPopupOpen(true)} className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <div onClick={() => setIsSpellPopupOpen(true)} className="bg-primary-purple rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-              </svg>
+              <img className='w-6 h-6' src={assets.edit}/>
             </div>
             <h3 className="text-xl font-semibold mb-2">Chính tả</h3>
             <p className="text-purple-100 text-sm">Luyện viết từ vựng</p>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
+          <div onClick={() => setIsListenPopupOpen(true)} className="bg-primary-orange rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
-              </svg>
+              <img className='w-6 h-6' src={assets.headphone}/>
             </div>
             <h3 className="text-xl font-semibold mb-2">Nghe phát âm</h3>
             <p className="text-orange-100 text-sm">Luyện nghe và phát âm</p>
@@ -217,7 +217,7 @@ export default function Vocabulary(){
                   type="text"
                   placeholder="Nhập từ khóa..."
                   value={searchTerm}
-                  onChange={handleSearchChange} // <-- SỬA DÙNG HANDLER MỚI
+                  onChange={handleSearchChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -403,6 +403,12 @@ export default function Vocabulary(){
           isOpen={isSpellPopupOpen}
           onClose={() => setIsSpellPopupOpen(false)}
           onStartSpell={handleStartSpell}
+        />
+
+        <ListenPopup
+          isOpen={isListenPopupOpen}
+          onClose={() => setIsListenPopupOpen(false)}
+          onStartListen={handleStartListen}
         />
       </div>
     </div>

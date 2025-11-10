@@ -127,5 +127,36 @@ export const useAuthStore = create((set, get) => ({
         } finally {
             set({ loading: false });
         }
+    },
+
+    // Cập nhật hồ sơ người dùng hiện tại
+    updateProfile: async (formData) => {
+        const userId = get().user?._id;
+        if (!userId) {
+            toast.error("Không tìm thấy ID người dùng để cập nhật.");
+            return;
+        }
+
+        try {
+            set({ loading: true });
+            
+            // Gọi service mới
+            const response = await authService.updateMyProfile(userId, formData);
+
+            if (response.user) {
+                // Cập nhật lại thông tin user trong store
+                set({ user: response.user }); 
+                toast.success(response.message || "Cập nhật hồ sơ thành công!");
+            } else {
+                toast.error("Cập nhật thất bại. Không nhận được dữ liệu người dùng mới.");
+            }
+            return response.user; // Trả về user để Profile.jsx có thể sử dụng
+        } catch (error) {
+            console.error("Lỗi khi cập nhật hồ sơ:", error);
+            toast.error(error.response?.data?.message || "Lỗi khi cập nhật hồ sơ.");
+            throw error; // Ném lỗi để component có thể bắt
+        } finally {
+            set({ loading: false });
+        }
     }
 }));

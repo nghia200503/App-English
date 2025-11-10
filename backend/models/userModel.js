@@ -42,6 +42,23 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ["user", "admin"],
         default: "user"
+    },
+
+    dob: {
+        type: Date // Ngày sinh
+    },
+    address: {
+        type: String,
+        trim: true
+    },
+    occupation: {
+        type: String, // Nghề nghiệp
+        trim: true
+    },
+    learningGoal: { // Mục tiêu học tập
+        type: String,
+        trim: true,
+        maxlength: 500
     }
     
 },{

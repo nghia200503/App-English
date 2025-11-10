@@ -110,7 +110,7 @@ function UserUpdate() {
             }
 
             // 5. Gọi API với FormData
-            await api.put(`/users/users/${id}`, data, {
+            await api.put(`/update/${id}`, data, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                     // Axios sẽ tự động set header này khi data là FormData

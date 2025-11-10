@@ -48,5 +48,16 @@ export const authService = {
         
         // Trả về mảng data người dùng
         return res.data;
+    },
+
+    // Cập nhật hồ sơ của chính người dùng
+    updateMyProfile: async (userId, formData) => {
+        // Sử dụng lại route PUT /users/users/:id giống như trang Admin
+        // authController.updateUser đã xử lý logic này
+        const res = await api.put(`/users/update/${userId}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        // Trả về { message, user }
+        return res.data;
     }
 }

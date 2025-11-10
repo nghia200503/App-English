@@ -18,7 +18,7 @@ export default function Header() {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <Link to="/learn" onClick={handleMobileLinkClick}>
-                        <img className="w-60" src={assets.logo} alt="Logo" />
+                        <img className="w-30 md:w-60" src={assets.logo} alt="Logo" />
                     </Link>
 
                     {/* Navigation Links */}
@@ -92,6 +92,7 @@ export default function Header() {
 
             {isMobileMenuOpen && (
                 <div className="md:hidden absolute w-full bg-white shadow-lg z-40">
+
                     <nav className="flex flex-col p-4 space-y-4">
                         <Link to="/learn" className="text-gray-600 hover:text-gray-900 transition" onClick={handleMobileLinkClick}>
                             Trang chủ
