@@ -21,17 +21,18 @@ export default function Flashcard() {
     if (settingsData) {
       const settings = JSON.parse(settingsData);
       setSelectedTopic(settings.topic);
-      fetchWords(settings.topic.nameTopic, settings.limit);
+      fetchWords(settings.topic, settings.limit);
     } else {
       setError('Vui lòng chọn danh mục trước khi học');
       setLoading(false);
     }
   }, []);
 
-  const fetchWords = async (topicName, limit) => {
+  const fetchWords = async (topic, limit) => {
     setLoading(true);
     setError(null);
     try {
+      const topicName = topic.nameTopic === 'Tất cả' ? 'all' : topic.nameTopic;
       const response = await api.get(`/words?topic=${topicName}&limit=${limit}`);
       const result = response.data; 
       

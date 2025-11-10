@@ -2,27 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { X, Layers, AlertCircle } from 'lucide-react';
-// Đảm bảo đường dẫn này trỏ đúng đến file topicService.js
 import { topicService } from '../services/topicService'; 
 import { toast } from 'sonner';
 
+// Tạo một đối tượng 'Tất cả'
+const allTopicsOption = { 
+  _id: 'all', 
+  nameTopic: 'Tất cả', 
+  meaning: 'Bao gồm tất cả chủ đề',
+  wordCount: 0 // Sẽ được cập nhật sau
+};
+
 export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
-  const [topics, setTopics] = useState([]);
-  const [selectedTopic, setSelectedTopic] = useState(null); // Bắt đầu là null
+  const [topics, setTopics] = useState([allTopicsOption]);
+  const [selectedTopic, setSelectedTopic] = useState(allTopicsOption);
+  const [wordLimit, setWordLimit] = useState('10'); // State giờ có thể là SỐ hoặc 'all'
+  const [maxWordsInTopic, setMaxWordsInTopic] = useState(0); // State mới
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // --- THÊM MỚI: State cho số lượng từ vựng ---
-  const [wordLimit, setWordLimit] = useState(10); // Mặc định là 10 từ
-  // ------------------------------------------
-
   useEffect(() => {
-    // Chỉ fetch khi popup được mở
     if (isOpen) {
-      // Reset về mặc định mỗi khi mở
       fetchTopics();
-      setSelectedTopic(null);
-      setWordLimit(10);
     }
   }, [isOpen]);
 
@@ -30,13 +31,25 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
     setLoading(true);
     setError(null);
     try {
-      // Gọi service để lấy danh sách chủ đề
       const response = await topicService.getAllTopicsDropdown();
       
       if (response.success && response.data) {
-        setTopics(response.data);
-        if (response.data.length === 0) {
-          setError('Chưa có danh mục nào. Vui lòng thêm danh mục trước.');
+        const topicsFromServer = response.data;
+        // Tính tổng số từ
+        const totalCount = topicsFromServer.reduce((acc, t) => acc + (t.wordCount || 0), 0);
+        
+        // Cập nhật 'wordCount' cho 'Tất cả chủ đề'
+        const allTopicWithCount = { ...allTopicsOption, wordCount: totalCount };
+
+        setTopics([allTopicWithCount, ...topicsFromServer]);
+        setSelectedTopic(allTopicWithCount); // Mặc định chọn 'Tất cả'
+        setMaxWordsInTopic(totalCount); // Mặc định là tổng
+        
+        // Mặc định là 10, hoặc tổng số từ nếu tổng < 10
+        setWordLimit(totalCount > 0 ? Math.min(10, totalCount).toString() : '10');
+
+        if (topicsFromServer.length === 0) {
+          setError('Chưa có danh mục nào.');
         }
       } else {
         setError('Không thể tải danh sách danh mục');
@@ -49,25 +62,61 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
       setLoading(false);
     }
   };
+  
+  // Xử lý khi chọn chủ đề
+  const handleTopicChange = (e) => {
+    const topic = topics.find(t => t._id === e.target.value) || allTopicsOption;
+    setSelectedTopic(topic);
+    
+    const newMax = topic.wordCount || 0;
+    setMaxWordsInTopic(newMax);
 
-  const handleStartLearn = () => {
-    if (selectedTopic) {
-      // --- CẬP NHẬT: Lưu cả topic VÀ limit vào localStorage ---
-      localStorage.setItem('flashcardSettings', JSON.stringify({ 
-        topic: selectedTopic, 
-        limit: wordLimit // Lưu số lượng đã chọn
-      }));
-      // ----------------------------------------------------
-      
-      // Gọi callback (từ Vocabulary.jsx) để chuyển trang
-      if (onStartLearn) {
-        onStartLearn(selectedTopic);
-      }
-      onClose(); // Đóng popup
+    // Nếu giới hạn hiện tại > max mới, thì điều chỉnh lại
+    if (wordLimit !== 'all' && newMax > 0 && parseInt(wordLimit) > newMax) {
+      setWordLimit(newMax.toString());
+    } else if (newMax === 0 && wordLimit !== 'all') {
+      setWordLimit('10'); // Reset nếu chủ đề mới không có từ
     }
   };
 
-  // Nếu không mở, không render gì cả
+  // Xử lý khi nhập số
+  const handleLimitChange = (e) => {
+    let value = e.target.value;
+    if (value === '') {
+      setWordLimit('');
+      return;
+    }
+    
+    let numValue = parseInt(value);
+    
+    if (isNaN(numValue) || numValue < 1) {
+      numValue = 1;
+    }
+    // Nếu có max, và giá trị vượt max
+    if (maxWordsInTopic > 0 && numValue > maxWordsInTopic) {
+      numValue = maxWordsInTopic;
+    }
+    
+    setWordLimit(numValue.toString());
+  };
+
+  const handleStartLearn = () => {
+    // Đảm bảo wordLimit không phải là chuỗi rỗng
+    const finalLimit = (wordLimit === '' || parseInt(wordLimit) === 0) ? '10' : wordLimit;
+
+    if (selectedTopic) {
+      localStorage.setItem('flashcardSettings', JSON.stringify({ 
+        topic: selectedTopic, 
+        limit: finalLimit 
+      }));
+      
+      if (onStartLearn) {
+        onStartLearn(selectedTopic);
+      }
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -75,10 +124,7 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
         {/* Header */}
         <div className="p-6 relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-lg transition"
-          >
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-lg transition">
             <X size={24} />
           </button>
           <h2 className="text-2xl font-bold mb-2 text-center">Học từ vựng bằng Flashcard</h2>
@@ -106,7 +152,7 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
             </div>
           )}
 
-          {/* Dropdown chọn chủ đề */}
+          {/* Dropdown chọn chủ đề (ĐÃ CẬP NHẬT) */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Danh mục từ vựng
@@ -118,47 +164,54 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
               </div>
             ) : (
               <select
-                value={selectedTopic?._id || ''}
-                onChange={(e) => {
-                  const topic = topics.find(t => t._id === e.target.value);
-                  // Sửa lỗi TypeError: Cannot read 'image' of undefined
-                  setSelectedTopic(topic || null); 
-                }}
+                value={selectedTopic?._id || 'all'}
+                onChange={handleTopicChange}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 transition"
-                disabled={topics.length === 0}
+                disabled={topics.length <= 1}
               >
-                <option value="">
-                  {topics.length === 0 ? 'Không có danh mục nào' : 'Chọn danh mục'}
-                </option>
+                {/* <option value="">Chọn danh mục</option> */}
                 {topics.map((topic) => (
                   <option key={topic._id} value={topic._id}>
-                    {topic.nameTopic} - {topic.meaning}
+                    {topic.nameTopic} {topic._id !== 'all' ? `- ${topic.meaning}` : `(${topic.wordCount} từ)`}
                   </option>
                 ))}
               </select>
             )}
           </div>
 
-          {/* --- THÊM MỚI: Chọn số lượng từ --- */}
+          {/* --- THAY ĐỔI: Chọn số lượng từ --- */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Số lượng từ vựng
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {[10, 20, 'all'].map((count) => (
-                <button
-                  key={count}
-                  onClick={() => setWordLimit(count)}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium transition ${
-                    wordLimit === count
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {count === 'all' ? 'Tất cả' : count}
-                </button>
-              ))}
+              <input
+                type="number"
+                value={wordLimit === 'all' ? maxWordsInTopic : wordLimit}
+                onChange={handleLimitChange}
+                onBlur={handleLimitChange} // Đảm bảo validation khi rời input
+                min="1"
+                max={maxWordsInTopic > 0 ? maxWordsInTopic : undefined} // Chỉ set max nếu > 0
+                disabled={loading || maxWordsInTopic === 0}
+                className="col-span-2 w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 transition disabled:bg-gray-50"
+              />
+              <button
+                onClick={() => setWordLimit('all')}
+                disabled={loading || maxWordsInTopic === 0}
+                className={`px-4 py-3 rounded-lg border-2 font-medium transition ${
+                  wordLimit === 'all'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                } disabled:opacity-50`}
+              >
+                Tất cả
+              </button>
             </div>
+            {maxWordsInTopic > 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                Tối đa: {maxWordsInTopic} từ trong chủ đề này.
+              </p>
+            )}
           </div>
           {/* ---------------------------------- */}
 
@@ -172,7 +225,7 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
             </button>
             <button
               onClick={handleStartLearn}
-              disabled={!selectedTopic || loading}
+              disabled={!selectedTopic || loading || maxWordsInTopic === 0}
               className="flex-1 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               Bắt đầu học
