@@ -4,6 +4,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { assets } from '../../assets/assets';
 import Header from '../../components/Header';
 import { BookOpen } from 'lucide-react';
+import Chatbot from '../../components/Chatbot';
 
 function Home() {
     const navigate = useNavigate();
@@ -429,6 +430,8 @@ function Home() {
                 </div>
                 
             </main>
+
+            <Chatbot />
         </div>
     );
 }

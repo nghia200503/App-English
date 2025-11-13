@@ -4,5 +4,21 @@
   --color-primary-blue: #2B7FFF;
   --color-primary-green: #00C951;
   --color-primary-purple: #AD46FF;
-  --color-primary-orange: #FF6900;
+  --color-primary-orange: #FF6900; 
 }
+@keyframes fadeIn {
+  0% { 
+    opacity: '0'; 
+    transform: 'translateY(10px)';
+  }
+  100% { 
+    opacity: '1'; 
+    transform: 'translateY(0)';
+  }
+  /* animation {
+    fadeIn: 'fadeIn 0.3s ease-out',
+  } */
+}
+/* @animation {
+  fadeIn: "fadeIn 0.3s ease-out";
+} */
