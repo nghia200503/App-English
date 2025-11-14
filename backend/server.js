@@ -6,6 +6,7 @@ import userRoute from "./routes/userRoute.js";
 import topicRoute from "./routes/topicRoute.js";
 import wordRoute from "./routes/wordRoute.js";
 import aiRoute from "./routes/aiRoute.js";
+import progressRoutes from "./routes/progressRoute.js";
 import cookieParser from "cookie-parser";
 import { protectedRoute } from "./middlewares/authMiddleware.js";
 import cors from "cors";
@@ -43,6 +44,7 @@ app.use('/api/users', userRoute);
 app.use('/api/topics', topicRoute);
 app.use('/api/words', wordRoute);
 app.use('/api/ai', aiRoute);
+app.use("/api/progress", progressRoutes);
 
 // Public route cho phép truy cập từ bên ngoài
 

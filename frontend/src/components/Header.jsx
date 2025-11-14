@@ -32,7 +32,7 @@ export default function Header() {
                         <Link to="/practice" className="text-gray-600 hover:text-gray-900 transition">
                             Luyện tập
                         </Link>
-                        <Link to="/statistics" className="text-gray-600 hover:text-gray-900 transition">
+                        <Link to="/progress" className="text-gray-600 hover:text-gray-900 transition">
                             Thống kê
                         </Link>
                         <Link to="/dictionary" className="text-gray-600 hover:text-gray-900 transition">
@@ -103,7 +103,7 @@ export default function Header() {
                         <Link to="/practice" className="text-gray-600 hover:text-gray-900 transition" onClick={handleMobileLinkClick}>
                             Luyện tập
                         </Link>
-                        <Link to="/statistics" className="text-gray-600 hover:text-gray-900 transition" onClick={handleMobileLinkClick}>
+                        <Link to="/progress" className="text-gray-600 hover:text-gray-900 transition" onClick={handleMobileLinkClick}>
                             Thống kê
                         </Link>
                         <Link to="/dictionary" className="text-gray-600 hover:text-gray-900 transition" onClick={handleMobileLinkClick}>

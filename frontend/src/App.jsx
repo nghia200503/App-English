@@ -25,6 +25,7 @@ import SpellResult from "./pages/User/SpellResult.jsx";
 import Listen from "./pages/User/Listen.jsx";
 import ListenResult from "./pages/User/ListenResult.jsx";
 import Profile from "./pages/User/Profile.jsx";
+import ProgressPage from "./pages/User/ProgressPage.jsx";
 
 // Component Loading
 // const PageLoader = () => (
@@ -55,6 +56,7 @@ function App() {
             <Route path='/vocabulary/spell/result' element={<SpellResult />} />
             <Route path='/vocabulary/listen' element={<Listen />} />
             <Route path='/vocabulary/listen/result' element={<ListenResult />} />
+            <Route path='/progress' element={<ProgressPage />} />
           </Route>
 
 

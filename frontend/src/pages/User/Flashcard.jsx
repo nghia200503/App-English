@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Volume2, ChevronLeft, ChevronRight, Pause, AlertCircle } from 'lucide-react';
 import api from '../../libs/axios'; 
 import { useNavigate } from 'react-router-dom';
+import { updateWordProgress } from '../../services/progressService';
 
 export default function Flashcard() {
   // --- TOÀN BỘ LOGIC VÀ STATE (từ dòng 9 đến 182) ĐƯỢC GIỮ NGUYÊN ---
@@ -87,6 +88,12 @@ export default function Flashcard() {
       setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
     } else {
       setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
+    }
+
+    if (currentWord && currentWord._id) {
+        // Gọi API cập nhật tiến độ cho kỹ năng flashcard
+        // isCorrect ở đây chỉ mang tính chất tham khảo cho backend biết user đánh giá thế nào
+        updateWordProgress(currentWord._id, 'flashcard');
     }
     
     setTimeout(() => {

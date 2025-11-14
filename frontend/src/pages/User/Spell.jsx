@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios'; // Dùng api (axios)
 import { AlertCircle, Volume2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { updateWordProgress } from '../../services/progressService';
 
 export default function Spell() {
   const [words, setWords] = useState([]);
@@ -86,6 +87,10 @@ export default function Spell() {
       setCorrectCount(prev => prev + 1);
     } else {
       setIsCorrect(false);
+    }
+
+    if (currentWord && currentWord._id) {
+        updateWordProgress(currentWord._id, 'spelling', isMatch);
     }
   };
   

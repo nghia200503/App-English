@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios';
 import { AlertCircle, Volume2, ArrowLeft, Info, Loader2 } from 'lucide-react';
+import { updateWordProgress } from '../../services/progressService';
 
 // Hàm helper (giữ nguyên)
 function shuffleArray(array) {
@@ -119,6 +120,7 @@ export default function Listen() {
     }
   };
 
+  // Xử lý khi chọn đáp án
   const handleAnswerSelect = (selectedWord) => {
     if (isAnswered) return;
     if (!hasListened) {
@@ -128,9 +130,14 @@ export default function Listen() {
     setIsAnswered(true);
     setSelectedAnswer(selectedWord);
     const currentQuestion = quizQuestions[currentQuestionIndex];
-    if (selectedWord === currentQuestion.correctAnswer) {
+    const isCorrect = selectedWord === currentQuestion.correctAnswer;
+    if (isCorrect) {
       setScore(prev => prev + 10);
       setCorrectCount(prev => prev + 1);
+    }
+
+    if (currentQuestion.correctWordObject && currentQuestion.correctWordObject._id) {
+        updateWordProgress(currentQuestion.correctWordObject._id, 'listen', isCorrect);
     }
   };
 
@@ -151,6 +158,7 @@ export default function Listen() {
     }
   };
   
+  // Chuyển đến trang kết quả
   const handleViewResults = () => {
     localStorage.removeItem('listenSettings');
     navigate('/vocabulary/listen/result', { 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios'; // Dùng api (axios) để gọi
 import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { updateWordProgress } from '../../services/progressService';
 
 // --- TẤT CẢ LOGIC (HÀM, STATE, EFFECTS) ĐƯỢC GIỮ NGUYÊN ---
 
@@ -42,6 +43,7 @@ const generateQuestions = (words) => {
     const explanation = `"${word.word}" (${word.pronunciation}) có nghĩa là "${word.translation}".`;
 
     return {
+      wordId: word._id,
       question: word.word,
       options: options,
       correctAnswer: correctAnswer,
@@ -110,6 +112,11 @@ export default function Quiz() {
     setIsAnswered(true);
     if (isCorrect) {
       setScore(prev => prev + 1);
+    }
+
+    // Cập nhật tiến độ từ vựng
+    if (currentQuestion.wordId) {
+        updateWordProgress(currentQuestion.wordId, 'quiz', isCorrect);
     }
   };
 
