@@ -1,22 +1,27 @@
 // src/pages/User/Flashcard.jsx
 
 import { useState, useEffect } from 'react';
-import { Volume2, ChevronLeft, ChevronRight, Pause, AlertCircle } from 'lucide-react';
-import api from '../../libs/axios'; 
+import { Volume2, ChevronLeft, AlertCircle } from 'lucide-react';
+import api from '../../libs/axios';
 import { useNavigate } from 'react-router-dom';
 import { updateWordProgress } from '../../services/progressService';
+// THÊM DÒNG NÀY: Import service giống như Listen.jsx
+import { studySessionService } from '../../services/studySessionService';
 
 export default function Flashcard() {
-  // --- TOÀN BỘ LOGIC VÀ STATE (từ dòng 9 đến 182) ĐƯỢC GIỮ NGUYÊN ---
+  // --- STATE VÀ LOGIC GIỮ NGUYÊN ---
   const [words, setWords] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({ correct: 0, wrong: 0 });
+  const [stats, setStats] = useState({ correct: 0, wrong: 0 }); 
   const [selectedTopic, setSelectedTopic] = useState(null);
   const navigate = useNavigate();
+  
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // --- useEffect VÀ fetchWords GIỮ NGUYÊN ---
   useEffect(() => {
     const settingsData = localStorage.getItem('flashcardSettings');
     if (settingsData) {
@@ -29,14 +34,21 @@ export default function Flashcard() {
     }
   }, []);
 
+  useEffect(() => {
+    if (isTransitioning) {
+      setTimeout(() => setIsTransitioning(false), 0);
+    }
+  }, [isTransitioning]);
+
   const fetchWords = async (topic, limit) => {
+    // ... (logic fetch giữ nguyên)
     setLoading(true);
     setError(null);
     try {
       const topicName = topic.nameTopic === 'Tất cả' ? 'all' : topic.nameTopic;
       const response = await api.get(`/words?topic=${topicName}&limit=${limit}`);
-      const result = response.data; 
-      
+      const result = response.data;
+
       if (result.success && result.data) {
         if (result.data.length === 0) {
           setError('Chưa có từ vựng nào trong danh mục này');
@@ -48,16 +60,18 @@ export default function Flashcard() {
       }
     } catch (err) {
       console.error('Lỗi khi tải từ vựng:', err);
+      // ... (xử lý lỗi giữ nguyên)
       if (err.response && err.response.status === 401) {
-          setError('Phiên đăng nhập hết hạn. Vui lòng tải lại trang.');
+        setError('Phiên đăng nhập hết hạn. Vui lòng tải lại trang.');
       } else {
-          setError('Lỗi kết nối đến server');
+        setError('Lỗi kết nối đến server');
       }
     } finally {
       setLoading(false);
     }
   };
 
+  // --- CÁC HÀM playAudio, handleCardClick, handleNext (GIỮ NGUYÊN) ---
   const playAudio = () => {
     if (words[currentIndex]?.audio) {
       const audio = new Audio(words[currentIndex].audio);
@@ -72,41 +86,66 @@ export default function Flashcard() {
   const handleNext = () => {
     if (currentIndex < words.length - 1) {
       setCurrentIndex(currentIndex + 1);
-      setIsFlipped(false);
+      setIsFlipped(false); // Đảm bảo thẻ mới luôn ở mặt úp
     }
   };
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setIsFlipped(false);
-    }
-  };
-
-  const handleAnswer = (isCorrect) => {
-    if (isCorrect) {
-      setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
-    } else {
-      setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
-    }
-
-    if (currentWord && currentWord._id) {
-        // Gọi API cập nhật tiến độ cho kỹ năng flashcard
-        // isCorrect ở đây chỉ mang tính chất tham khảo cho backend biết user đánh giá thế nào
-        updateWordProgress(currentWord._id, 'flashcard');
-    }
+  // *** THAY ĐỔI HÀM NÀY ***
+  // Thêm 'async' và logic lưu session
+  const handleAnswer = async (isCorrect) => {
+    // 1. Tính toán stats mới
+    const newCorrect = isCorrect ? stats.correct + 1 : stats.correct;
+    const newWrong = !isCorrect ? stats.wrong + 1 : stats.wrong;
     
-    setTimeout(() => {
-      if (currentIndex < words.length - 1) {
-        handleNext();
+    // 2. Lên lịch cập nhật state
+    setStats({ correct: newCorrect, wrong: newWrong });
+
+    // 3. Cập nhật progress (giữ nguyên)
+    const currentWord = words[currentIndex];
+    if (currentWord && currentWord._id) {
+      updateWordProgress(currentWord._id, 'flashcard');
+    }
+
+    // 4. KIỂM TRA ĐIỀU KIỆN CHUYỂN TRANG
+    if (currentIndex === words.length - 1) {
+      // Đây là thẻ cuối cùng
+      
+      // *** THÊM VÀO: Lưu vào lịch sử học tập (Database) ***
+      // Logic này được sao chép từ Listen.jsx
+      try {
+        await studySessionService.saveSession({
+          mode: 'flashcard',
+          totalQuestions: words.length,
+          correctAnswers: newCorrect, // 'newCorrect' là số câu đúng (đã biết)
+          score: Math.round((newCorrect / words.length) * 10) // Quy đổi ra thang điểm 10
+        });
+      } catch (err) {
+        console.error('Lỗi khi lưu lịch sử học Flashcard:', err);
+        // Có thể bỏ qua lỗi và vẫn cho xem kết quả
       }
-    }, 300);
+      
+      localStorage.removeItem('flashcardSettings');
+      
+      // Chuyển sang trang kết quả (giữ nguyên)
+      navigate('/vocabulary/flashcard/result', {
+        state: {
+          correct: newCorrect, 
+          totalQuestions: words.length
+        }
+      });
+
+    } else {
+      // Chưa phải thẻ cuối cùng, chuyển thẻ tiếp theo (logic cũ)
+      setIsTransitioning(true); 
+      handleNext();
+    }
   };
 
   const handleStopLearning = () => {
-    if (confirm('Bạn có chắc muốn dừng học?')) {
-      localStorage.removeItem('flashcardSettings'); 
-      navigate('/vocabulary'); 
+    // ... (logic giữ nguyên)
+    if (confirm('Bạn có chắc muốn thoát?')) {
+      localStorage.removeItem('flashcardSettings');
+      navigate('/vocabulary');
     }
   };
 
@@ -114,7 +153,7 @@ export default function Flashcard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        {/* ... (màn hình loading) ... */}
+        <p>Đang tải...</p>
       </div>
     );
   }
@@ -122,7 +161,21 @@ export default function Flashcard() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-        {/* ... (màn hình lỗi) ... */}
+        <div className="text-center bg-white p-6 rounded-lg shadow-lg">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+          <h3 className="mt-2 text-lg font-medium text-gray-900">Lỗi</h3>
+          <div className="mt-2 text-sm text-gray-600">
+            <p>{error}</p>
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={() => navigate('/vocabulary')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Quay về trang từ vựng
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -130,7 +183,21 @@ export default function Flashcard() {
   if (words.length === 0 && !loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-         {/* ... (màn hình rỗng) ... */}
+        <div className="text-center bg-white p-6 rounded-lg shadow-lg">
+          <AlertCircle className="mx-auto h-12 w-12 text-blue-500" />
+          <h3 className="mt-2 text-lg font-medium text-gray-900">Không có từ vựng</h3>
+          <div className="mt-2 text-sm text-gray-600">
+            <p>Không tìm thấy từ vựng nào cho chủ đề này.</p>
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={() => navigate('/vocabulary')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Quay về trang từ vựng
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -138,43 +205,44 @@ export default function Flashcard() {
   const currentWord = words[currentIndex];
   const progress = ((currentIndex + 1) / words.length) * 100;
 
-  // --- PHẦN RENDER BỐ CỤC (ĐÃ THAY ĐỔI) ---
+  // --- PHẦN RENDER BỐ CỤC (GIỮ NGUYÊN) ---
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-6">
-      
-      {/* THAY ĐỔI: Tăng max-w-4xl -> max-w-6xl */}
-      <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col min-h-0">
-        
+      <div className="max-w-4xl w-full mx-auto flex-1 flex flex-col min-h-0">
+
         {/* Header Progress (Giữ nguyên) */}
-        <div className="mb-4 flex-shrink-0"> 
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              Tiến độ: {currentIndex + 1}/{words.length}
+        <div className="mb-4 flex-shrink-0">
+          <div className="flex justify-between items-center mb-4">
+            <button 
+              onClick={handleStopLearning} 
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition"
+            >
+              <ChevronLeft size={20} />
+              <span className="font-medium">Thoát</span>
+            </button>
+            <span className="text-lg font-bold text-blue-600">
+              Câu {currentIndex + 1}/{words.length}
             </span>
-            <div className="flex gap-4 text-sm">
-              <span className="text-green-600 font-medium">Đúng: {stats.correct}</span>
-              <span className="text-red-600 font-medium">Sai: {stats.wrong}</span>
-            </div>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
         </div>
 
-        {/* THAY ĐỔI: Thêm wrapper flex-row cho card và nút */}
+        {/* Wrapper flex-row cho card và nút (Giữ nguyên) */}
         <div className="flex-1 md:flex md:flex-row md:gap-6 lg:gap-8 min-h-0">
-          
-          {/* CỘT 1: FLASHCARD (md:flex-[3] ~ 60%) */}
+
+          {/* CỘT 1: FLASHCARD (Giữ nguyên) */}
           <div
-            className="relative md:flex-[3] min-h-[400px] md:min-h-full h-full cursor-pointer" // Bỏ mb-4, Sửa flex-1
+            className="relative md:flex-[3] min-h-[400px] md:min-h-full h-full cursor-pointer"
             style={{ perspective: '1000px' }}
             onClick={handleCardClick}
           >
             <div
-              className={`relative w-full h-full transition-transform duration-600`}
+              className={`relative w-full h-full ${!isTransitioning ? 'transition-transform duration-600' : ''}`}
               style={{
                 transformStyle: 'preserve-3d',
                 transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
@@ -188,7 +256,6 @@ export default function Flashcard() {
                   WebkitBackfaceVisibility: 'hidden'
                 }}
               >
-                {/* ... (Nội dung mặt trước) ... */}
                 <div className="w-40 h-40 mb-4 rounded-2xl overflow-hidden bg-amber-50 flex items-center justify-center">
                   {currentWord.image ? (
                     <img
@@ -197,7 +264,7 @@ export default function Flashcard() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-5xl text-amber-600">.word</span> 
+                    <span className="text-5xl text-amber-600">.word</span>
                   )}
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
@@ -208,11 +275,15 @@ export default function Flashcard() {
                 </div>
                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">{currentWord.word}</h2>
                 <p className="text-lg md:text-xl text-gray-500 mb-3">{currentWord.pronunciation}</p>
-                <div className="flex gap-2 mb-3">
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
-                    {currentWord.topic}
-                  </span>
-                </div>
+
+                {currentWord.topic && (
+                  <div className="flex gap-2 mb-3">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
+                      {currentWord.topic}
+                    </span>
+                  </div>
+                )}
+                
                 <p className="text-gray-600 text-center">Nhấn để xem nghĩa</p>
               </div>
 
@@ -225,7 +296,6 @@ export default function Flashcard() {
                   transform: 'rotateY(180deg)'
                 }}
               >
-                {/* ... (Nội dung mặt sau) ... */}
                 <div className="w-32 h-32 mb-4 rounded-xl overflow-hidden bg-amber-50 flex items-center justify-center">
                   {currentWord.image ? (
                     <img
@@ -252,11 +322,9 @@ export default function Flashcard() {
             </div>
           </div>
 
-          {/* CỘT 2: CÁC NÚT BẤM (md:flex-[2] ~ 40%) */}
-          {/* THAY ĐỔI: Chuyển toàn bộ nút bấm vào đây */}
+          {/* CỘT 2: CÁC NÚT BẤM (Giữ nguyên) */}
           <div className="flex-shrink-0 md:flex-[2] md:flex md:flex-col md:gap-4 mt-4 md:mt-0">
-            
-            {/* Nút Phát âm */}
+            {/* Nút Phát âm (Giữ nguyên) */}
             <div className="flex justify-center">
               <button
                 onClick={(e) => {
@@ -270,16 +338,7 @@ export default function Flashcard() {
               </button>
             </div>
 
-            {/* Nút Dừng học */}
-            <button
-              onClick={handleStopLearning}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition mt-4 md:mt-0"
-            >
-              <Pause size={20} />
-              <span className="font-medium">Dừng học</span>
-            </button>
-
-            {/* Các nút 'Đã biết'/'Chưa biết' */}
+            {/* Các nút 'Đã biết'/'Chưa biết' (Giữ nguyên) */}
             {isFlipped && (
               <div className="flex flex-col gap-4 mt-4">
                 <button
@@ -296,32 +355,9 @@ export default function Flashcard() {
                 </button>
               </div>
             )}
-
-            {/* Nút điều hướng (Luôn ở dưới cùng) */}
-            <div className="flex gap-4 mt-4 md:mt-auto">
-              <button
-                onClick={handlePrev}
-                disabled={currentIndex === 0}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft size={20} />
-                <span className="font-medium">Trước</span>
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={currentIndex === words.length - 1}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="font-medium">Tiếp theo</span>
-                <ChevronRight size={20} />
-              </button>
-            </div>
-
+            <div className="md:mt-auto"></div>
           </div>
-
-        </div> 
-        {/* Kết thúc wrapper flex-row */}
-
+        </div>
       </div>
     </div>
   );

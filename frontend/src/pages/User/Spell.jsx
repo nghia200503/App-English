@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios'; // Dùng api (axios)
 import { AlertCircle, Volume2, ArrowLeft, RefreshCw } from 'lucide-react';
-import { updateWordProgress } from '../../services/progressService';
+import { studySessionService } from '../../services/studySessionService';
 
 export default function Spell() {
   const [words, setWords] = useState([]);
@@ -130,12 +130,18 @@ export default function Spell() {
   };
 
   // 6. Xem kết quả
-  const handleViewResults = () => {
+  const handleViewResults = async () => {
+    await studySessionService.saveSession({
+        mode: 'spell',
+        totalQuestions: questions.length,
+        correctAnswers: score,
+        score: Math.round((score / questions.length) * 10) 
+    });
     localStorage.removeItem('spellSettings');
     navigate('/vocabulary/spell/result', { 
       state: { 
         score: score, 
-        totalWords: words.length,
+        totalQuestions: questions.length,
         correctCount: correctCount
       } 
     });

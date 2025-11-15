@@ -1,13 +1,12 @@
-// pages/Listen.jsx
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios';
 import { AlertCircle, Volume2, ArrowLeft, Info, Loader2 } from 'lucide-react';
-import { updateWordProgress } from '../../services/progressService';
+import { studySessionService } from '../../services/studySessionService';
 
-// Hàm helper (giữ nguyên)
+// Hàm helper xáo trộn mảng
 function shuffleArray(array) {
-  let currentIndex = array.length,  randomIndex;
+  let currentIndex = array.length, randomIndex;
   while (currentIndex !== 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
@@ -18,15 +17,14 @@ function shuffleArray(array) {
 }
 
 export default function Listen() {
-  // --- Toàn bộ state và logic (từ dòng 20 đến 232) được giữ nguyên ---
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null); 
   const [isAnswered, setIsAnswered] = useState(false);
   const [hasListened, setHasListened] = useState(false);
   const [showListenWarning, setShowListenWarning] = useState(false);
-  const [score, setScore] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
+  const [score, setScore] = useState(0); // score giờ sẽ đếm số câu đúng (1, 2, 3...) giống Quiz
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -51,36 +49,32 @@ export default function Listen() {
       const response = await api.get(`/words?topic=${topicName}&limit=all`);
       const allWords = response.data?.data;
 
-      if (!allWords || allWords.length < 4) {
-        setError('Không đủ từ vựng (cần ít nhất 4 từ) để tạo bài nghe.');
-        setLoading(false); // Thêm dòng này
+      if (!allWords || allWords.length === 0) {
+        setError('Không tìm thấy từ vựng nào cho chủ đề này.');
+        setLoading(false);
         return;
       }
       
+      // Luôn đảm bảo fetch đủ 4 từ để làm đáp án nhiễu nếu có thể
       const shuffledWords = shuffleArray([...allWords]);
-      const actualLimit = limit === 'all' ? shuffledWords.length : Math.min(parseInt(limit), shuffledWords.length);
       
-      // -- Sửa lỗi logic: Đảm bảo có đủ từ để tạo câu hỏi --
-      const questionsToCreate = Math.min(actualLimit, allWords.length);
-      if (questionsToCreate === 0) {
-         setError('Không tìm thấy từ vựng nào cho chủ đề này.');
-         setLoading(false);
-         return;
-      }
-      // Lấy từ cho câu hỏi từ danh sách đã xáo trộn
+      // Số câu hỏi cần tạo
+      const userLimit = parseInt(limit);
+      const questionsToCreate = limit === 'all' ? shuffledWords.length : Math.min(userLimit, shuffledWords.length);
+      
       const correctWords = shuffledWords.slice(0, questionsToCreate);
 
       const newQuizQuestions = correctWords.map((correctWord) => {
-        const distractors = shuffleArray(
-            [...allWords.filter(w => w._id !== correctWord._id)]
-          ).slice(0, 3);
-          
-        // Nếu không đủ 3 từ distractors, ta có thể lấy lặp lại từ bể
-        while (distractors.length < 3) {
-            const randomWord = allWords[Math.floor(Math.random() * allWords.length)];
-            if (randomWord._id !== correctWord._id && !distractors.find(d => d._id === randomWord._id)) {
-                distractors.push(randomWord);
-            }
+        // Lấy các từ khác làm đáp án nhiễu
+        const otherWords = allWords.filter(w => w._id !== correctWord._id);
+        const shuffledOthers = shuffleArray([...otherWords]);
+        
+        // Lấy tối đa 3 đáp án sai
+        let distractors = shuffledOthers.slice(0, 3);
+        
+        // Fallback nếu không đủ từ trong DB (lặp lại từ để giữ layout)
+        while (distractors.length < 3 && allWords.length > 1) {
+             distractors.push(shuffledOthers[0] || correctWord); 
         }
 
         const options = shuffleArray([
@@ -120,24 +114,21 @@ export default function Listen() {
     }
   };
 
-  // Xử lý khi chọn đáp án
   const handleAnswerSelect = (selectedWord) => {
     if (isAnswered) return;
     if (!hasListened) {
       setShowListenWarning(true); 
       return;
     }
+    
     setIsAnswered(true);
     setSelectedAnswer(selectedWord);
+    
     const currentQuestion = quizQuestions[currentQuestionIndex];
     const isCorrect = selectedWord === currentQuestion.correctAnswer;
+    
     if (isCorrect) {
-      setScore(prev => prev + 10);
-      setCorrectCount(prev => prev + 1);
-    }
-
-    if (currentQuestion.correctWordObject && currentQuestion.correctWordObject._id) {
-        updateWordProgress(currentQuestion.correctWordObject._id, 'listen', isCorrect);
+      setScore(prev => prev + 1); // Tăng 1 điểm cho mỗi câu đúng (giống Quiz)
     }
   };
 
@@ -158,14 +149,23 @@ export default function Listen() {
     }
   };
   
-  // Chuyển đến trang kết quả
-  const handleViewResults = () => {
+  const handleViewResults = async () => {
+    // Lưu vào lịch sử học tập (Database)
+    // score ở đây là số câu đúng.
+    await studySessionService.saveSession({
+        mode: 'listen',
+        totalQuestions: quizQuestions.length, 
+        correctAnswers: score, 
+        score: Math.round((score / quizQuestions.length) * 10) // Quy đổi ra thang điểm 10 để lưu DB
+    });
+    
     localStorage.removeItem('listenSettings');
+    
+    // Chuyển trang & Gửi dữ liệu qua state
     navigate('/vocabulary/listen/result', { 
       state: { 
-        score: score, 
-        totalWords: quizQuestions.length,
-        correctCount: correctCount
+        score: score, // Số câu đúng
+        totalQuestions: quizQuestions.length
       } 
     });
   };
@@ -177,7 +177,6 @@ export default function Listen() {
     }
   };
 
-  // --- Các trạng thái render (Loading, Error) giữ nguyên ---
   if (loading) {
     return (
       <div className="min-h-screen bg-purple-50 flex items-center justify-center">
@@ -194,7 +193,7 @@ export default function Listen() {
       <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
           <AlertCircle className="text-red-500 w-12 h-12 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Đã xảy ra lỗi</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Thông báo</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/vocabulary')}
@@ -207,24 +206,7 @@ export default function Listen() {
     );
   }
   
-  // Tránh lỗi nếu fetch không thành công nhưng không báo error
-  if (quizQuestions.length === 0) {
-     return (
-       <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-          <AlertCircle className="text-yellow-500 w-12 h-12 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Không có câu hỏi</h2>
-          <p className="text-gray-600 mb-6">Không thể tạo bài luyện nghe. Vui lòng thử lại với chủ đề khác.</p>
-          <button
-            onClick={() => navigate('/vocabulary')}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-          >
-            Quay về trang từ vựng
-          </button>
-        </div>
-      </div>
-     )
-  }
+  if (quizQuestions.length === 0) return null;
   
   const currentQuestion = quizQuestions[currentQuestionIndex];
   const { correctWordObject, options, correctAnswer } = currentQuestion;
@@ -244,10 +226,9 @@ export default function Listen() {
     return 'border-gray-300 text-gray-500'; 
   };
 
-  // --- PHẦN RENDER BỐ CỤC (ĐÃ THAY ĐỔI) ---
   return (
     <div className="min-h-screen bg-purple-50 p-4 md:p-8 flex items-center justify-center">
-      <div className="max-w-4xl w-full"> {/* Thay đổi max-w-xl thành max-w-4xl */}
+      <div className="max-w-4xl w-full">
         <div className="absolute top-4 left-4">
            <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-500 hover:text-purple-600">
             <ArrowLeft size={20} />
@@ -256,14 +237,14 @@ export default function Listen() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Header Card (Giữ nguyên) */}
+          {/* Header Card */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <span className="text-sm font-medium text-gray-500">
                 Từ {currentQuestionIndex + 1}/{quizQuestions.length}
               </span>
               <span className="text-sm font-medium text-purple-600">
-                Điểm: {score}
+                Đúng: {score}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -274,12 +255,9 @@ export default function Listen() {
             </div>
           </div>
           
-          {/* Nội dung chính - THAY ĐỔI BỐ CỤC
-            Sử dụng Grid, 1 cột trên di động, 2 cột (grid-cols-2) trên md trở lên
-          */}
           <div className="p-6 md:p-8 grid md:grid-cols-2 items-start">
             
-            {/* CỘT BÊN TRÁI (Sticky) */}
+            {/* CỘT BÊN TRÁI */}
             <div className="flex flex-col items-center md:sticky md:top-24">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 Nghe và chọn từ đúng
@@ -292,7 +270,7 @@ export default function Listen() {
                 <Volume2 size={36} />
               </button>
               <p className="text-sm text-gray-500 mb-4">
-                {hasListened ? `Đã nghe 1 lần` : 'Nhấn để nghe từ'}
+                {hasListened ? `Đã nghe` : 'Nhấn để nghe từ'}
               </p>
               
               <div className="flex gap-3 mb-6">
@@ -303,7 +281,7 @@ export default function Listen() {
             </div>
 
             {/* CỘT BÊN PHẢI */}
-            <div className="w-full flex flex-col gap-3"> {/* Dùng gap-3 thay vì space-y-3 */}
+            <div className="w-full flex flex-col gap-3">
               
               {showListenWarning && (
                 <div className="w-full p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm flex items-center gap-2">
@@ -312,7 +290,6 @@ export default function Listen() {
                 </div>
               )}
               
-              {/* Các lựa chọn */}
               {options.map((option, index) => (
                 <button
                   key={index}
@@ -326,8 +303,6 @@ export default function Listen() {
               ))}
             </div>
 
-            {/* PHẦN CUỐI (Feedback và Nút bấm) - Cho nó kéo dài 2 cột */}
-            
             {/* Thông tin từ (Khi đã trả lời) */}
             {isAnswered && (
               <div className="md:col-span-2 w-full bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">

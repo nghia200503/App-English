@@ -1,57 +1,68 @@
 // frontend/src/pages/User/ProgressPage.jsx
 import React, { useEffect, useState } from 'react';
-import { getMyProgress } from '../../services/progressService';
+import { studySessionService } from '../../services/studySessionService'; // Import service mới
 import Header from '../../components/Header';
 import { 
-  BookOpen, 
-  BadgeCheck, 
-  Zap, 
-  Headphones, 
+  History, 
+  Calendar, 
+  Target, 
   CheckCircle2, 
+  XCircle,
   Loader2,
-  Activity
+  Trophy,
+  BrainCircuit,
+  Headphones,
+  Zap,
+  Book
 } from 'lucide-react';
 
 const ProgressPage = () => {
-  const [progressData, setProgressData] = useState([]);
+  const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProgress();
+    fetchHistory();
   }, []);
 
-  const fetchProgress = async () => {
+  const fetchHistory = async () => {
     try {
-      const data = await getMyProgress();
-      setProgressData(data);
+      const response = await studySessionService.getHistory();
+      if (response && response.success) {
+        setHistoryData(response.data);
+      }
     } catch (error) {
-      console.error("Failed to fetch progress", error);
+      console.error("Failed to fetch history", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Tính toán thống kê
-  const totalWordsInteracted = progressData.length;
-  const masteredWords = progressData.filter(p => p.isMastered).length;
-  const totalQuizCorrect = progressData.reduce((sum, p) => sum + (p.quiz?.correctCount || 0), 0);
-  const totalListenCorrect = progressData.reduce((sum, p) => sum + (p.listen?.correctCount || 0), 0);
+  // Hàm helper để format ngày tháng
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
 
-  // Component hiển thị Badge kỹ năng
-  const SkillBadge = ({ active, count, label, color }) => {
-    const colorClasses = {
-      blue: active ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-400 border-gray-200",
-      purple: active ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-gray-50 text-gray-400 border-gray-200",
-      indigo: active ? "bg-indigo-100 text-indigo-700 border-indigo-200" : "bg-gray-50 text-gray-400 border-gray-200",
-      emerald: active ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-gray-50 text-gray-400 border-gray-200",
-    };
-
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${colorClasses[color]} transition-colors duration-200`}>
-        {label}
-        {count > 0 && <span className="ml-1.5 opacity-75">| {count}</span>}
-      </span>
-    );
+  // Hàm helper để lấy Icon và Màu theo Mode
+  const getModeConfig = (mode) => {
+    switch (mode) {
+      case 'quiz':
+        return { label: 'Trắc nghiệm', icon: <Zap size={18} />, color: 'text-purple-600 bg-purple-100 border-purple-200' };
+      case 'flashcard':
+        return { label: 'Flashcard', icon: <Book size={18} />, color: 'text-blue-600 bg-blue-100 border-blue-200' };
+      case 'listen':
+        return { label: 'Luyện nghe', icon: <Headphones size={18} />, color: 'text-orange-600 bg-orange-100 border-orange-200' };
+      case 'spell':
+        return { label: 'Chính tả', icon: <BrainCircuit size={18} />, color: 'text-emerald-600 bg-emerald-100 border-emerald-200' };
+      default:
+        return { label: mode, icon: <History size={18} />, color: 'text-gray-600 bg-gray-100 border-gray-200' };
+    }
   };
 
   if (loading) {
@@ -59,156 +70,107 @@ const ProgressPage = () => {
       <div className="flex h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 font-medium">Đang tải dữ liệu học tập...</p>
+          <p className="text-gray-500 font-medium">Đang tải lịch sử học tập...</p>
         </div>
       </div>
     );
   }
 
   return (
-    // Layout thay đổi: Flex cột để Header ở trên, Main ở dưới full chiều rộng
     <div className="flex flex-col h-screen bg-gray-50">
-      <Header title="Tiến Độ Học Tập Của Tôi" />
+      <Header title="Lịch Sử Học Tập" />
       
       <div className="flex-1 overflow-hidden relative">
-        <main className="h-full overflow-x-hidden overflow-y-auto p-6 scroll-smooth">
-          <div className="container mx-auto max-w-6xl">
-            
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {/* Card 1 */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <BookOpen className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Đang học</span>
-                </div>
-                <div className="text-3xl font-bold text-gray-800">{totalWordsInteracted}</div>
-                <p className="text-sm text-gray-500 mt-1">Từ vựng đã xem</p>
+        <main className="h-full overflow-x-hidden overflow-y-auto p-4 md:p-6 scroll-smooth">
+          <div className="container mx-auto max-w-5xl">
+           
+
+            {/* Bảng Lịch Sử */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-white sticky top-0 z-10">
+                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <History className="text-blue-600" size={24} />
+                  Nhật ký hoạt động
+                </h3>
               </div>
 
-              {/* Card 2 */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-emerald-50 rounded-lg">
-                    <BadgeCheck className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Thành thạo</span>
-                </div>
-                <div className="text-3xl font-bold text-gray-800">{masteredWords}</div>
-                <p className="text-sm text-gray-500 mt-1">Từ đã thuộc lòng</p>
-              </div>
-
-              {/* Card 3 */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <Zap className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Quiz Point</span>
-                </div>
-                <div className="text-3xl font-bold text-gray-800">{totalQuizCorrect}</div>
-                <p className="text-sm text-gray-500 mt-1">Câu trả lời đúng</p>
-              </div>
-
-              {/* Card 4 */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-orange-50 rounded-lg">
-                    <Headphones className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Listening</span>
-                </div>
-                <div className="text-3xl font-bold text-gray-800">{totalListenCorrect}</div>
-                <p className="text-sm text-gray-500 mt-1">Bài nghe đúng</p>
-              </div>
-            </div>
-
-            {/* Details Table Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-gray-500" />
-                  <h3 className="text-lg font-bold text-gray-800">Chi tiết từ vựng</h3>
-                </div>
-                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                  Tổng: {progressData.length} từ
-                </span>
-              </div>
-              
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider font-semibold">
-                      <th className="px-6 py-4">Từ vựng</th>
-                      <th className="px-6 py-4">Nghĩa</th>
-                      <th className="px-6 py-4 text-center">Trạng thái</th>
-                      <th className="px-6 py-4">Kỹ năng luyện tập</th>
+                    <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold">
+                      <th className="px-6 py-4">Thời gian</th>
+                      <th className="px-6 py-4">Hình thức</th>
+                      <th className="px-6 py-4 text-center">Số câu hỏi</th>
+                      <th className="px-6 py-4">Kết quả chi tiết</th>
+                      <th className="px-6 py-4 text-center">Điểm số</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {progressData.map((item) => (
-                      <tr key={item._id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4">
-                          <span className="text-base font-bold text-indigo-900 block">
-                            {item.wordId?.word || <span className="text-gray-400 italic">Đã xóa</span>}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-600 font-medium">
-                          {item.wordId?.translation}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          {item.isMastered ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 shadow-sm">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> <span>Mastered</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-200">
-                              Learning
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            <SkillBadge 
-                              active={item.flashcard?.viewCount > 0} 
-                              count={item.flashcard?.viewCount} 
-                              label="Flashcard" 
-                              color="blue" 
-                            />
-                            <SkillBadge 
-                              active={item.listen?.correctCount > 0} 
-                              count={item.listen?.correctCount} 
-                              label="Listen" 
-                              color="indigo" 
-                            />
-                            <SkillBadge 
-                              active={item.quiz?.correctCount > 0} 
-                              count={item.quiz?.correctCount} 
-                              label="Quiz" 
-                              color="purple" 
-                            />
-                            <SkillBadge 
-                              active={item.spelling?.correctCount > 0} 
-                              count={item.spelling?.correctCount} 
-                              label="Spell" 
-                              color="emerald" 
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {historyData.map((session) => {
+                      const config = getModeConfig(session.mode);
+                      
+                      // Tính toán số câu sai (nếu API không trả về)
+                      const wrongAnswers = session.wrongAnswers ?? (session.totalQuestions - session.correctAnswers);
+                      
+                      return (
+                        <tr key={session._id} className="hover:bg-blue-50/50 transition-colors group cursor-default">
+                          {/* Cột 1: Thời gian */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <Calendar size={16} className="text-gray-400" />
+                              <span className="font-medium">{formatDate(session.createdAt)}</span>
+                            </div>
+                          </td>
 
-                    {progressData.length === 0 && (
+                          {/* Cột 2: Hình thức (Mode) */}
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-semibold ${config.color}`}>
+                              {config.icon}
+                              {config.label}
+                            </span>
+                          </td>
+
+                          {/* Cột 3: Số câu hỏi */}
+                          <td className="px-6 py-4 text-center">
+                            <span className="font-bold text-gray-700">{session.totalQuestions}</span>
+                          </td>
+
+                          {/* Cột 4: Kết quả chi tiết (Đúng/Sai) */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-2.5 py-1 rounded-md border border-green-100">
+                                <CheckCircle2 size={16} />
+                                <span className="font-bold">{session.correctAnswers}</span>
+                                <span className="text-xs opacity-80">Đúng</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-red-500 bg-red-50 px-2.5 py-1 rounded-md border border-red-100">
+                                <XCircle size={16} />
+                                <span className="font-bold">{wrongAnswers}</span>
+                                <span className="text-xs opacity-80">Sai</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Cột 5: Điểm số - ĐÃ THAY ĐỔI */}
+                          <td className="px-6 py-4 text-center">
+                            <div className="inline-block px-3 py-1 rounded-lg font-bold text-sm bg-gray-200">
+                              {/* ĐÂY LÀ DÒNG ĐÃ THAY ĐỔI */}
+                              {(session.correctAnswers) * 10} / {(session.totalQuestions) * 10}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {historyData.length === 0 && (
                       <tr>
-                        <td colSpan="4" className="px-6 py-16 text-center">
+                        <td colSpan="5" className="px-6 py-16 text-center">
                           <div className="flex flex-col items-center justify-center text-gray-400">
                             <div className="bg-gray-100 p-4 rounded-full mb-3">
-                                <BookOpen className="w-8 h-8 text-gray-300" />
+                                <History className="w-8 h-8 text-gray-300" />
                             </div>
-                            <p className="text-base font-medium text-gray-600">Bạn chưa có dữ liệu học tập nào.</p>
-                            <p className="text-sm mt-1 text-gray-400">Hãy bắt đầu học ngay để thấy tiến độ của bạn tại đây!</p>
+                            <p className="text-base font-medium text-gray-600">Chưa có lịch sử học tập.</p>
+                            <p className="text-sm mt-1 text-gray-400">Hãy làm bài kiểm tra để lưu lại kết quả!</p>
                           </div>
                         </td>
                       </tr>

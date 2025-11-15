@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios'; // Dùng api (axios) để gọi
 import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { updateWordProgress } from '../../services/progressService';
+import { studySessionService } from '../../services/studySessionService';
 
 // --- TẤT CẢ LOGIC (HÀM, STATE, EFFECTS) ĐƯỢC GIỮ NGUYÊN ---
 
@@ -86,8 +86,8 @@ export default function Quiz() {
       const result = response.data;
 
       if (result.success && result.data) {
-        if (result.data.length < 4) {
-          setError(`Không đủ từ vựng (cần ít nhất 4, tìm thấy ${result.data.length}) để tạo bài trắc nghiệm.`);
+        if (result.data.length < 1) {
+          setError(`Không đủ từ vựng (cần ít nhất 1, tìm thấy ${result.data.length}) để tạo bài trắc nghiệm.`);
         } else {
           const generated = generateQuestions(result.data);
           setQuestions(generated);
@@ -132,7 +132,17 @@ export default function Quiz() {
   };
 
   // 5. Xử lý khi nhấn "Xem kết quả"
-  const handleViewResults = () => {
+  const handleViewResults = async () => {
+    
+    // --- CẬP NHẬT TÊN HÀM GỌI ---
+    await studySessionService.saveSession({
+        mode: 'quiz',
+        totalQuestions: questions.length,
+        correctAnswers: score,
+        score: Math.round((score / questions.length) * 10) 
+    });
+    // -----------------------------
+
     localStorage.removeItem('quizSettings');
     navigate('/vocabulary/quiz/result', { 
       state: { 

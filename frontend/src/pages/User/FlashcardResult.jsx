@@ -1,30 +1,31 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Trophy, ArrowRight, RotateCw } from 'lucide-react';
 
-export default function ListenResult() {
+export default function FlashcardResult() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Lấy dữ liệu từ state chuyển trang (được gửi từ Listen.jsx)
-  const { score, totalQuestions } = location.state || { score: 0, totalQuestions: 0 };
+  // Lấy dữ liệu từ state (được gửi từ Flashcard.jsx)
+  // Nhận 'correct' (số câu đúng) và 'totalQuestions'
+  const { correct, totalQuestions } = location.state || { correct: 0, totalQuestions: 0 };
 
   // Tính toán hiển thị
-  const correctAnswers = score; // score bây giờ là số câu trả lời đúng
+  const correctAnswers = correct;
   const wrongAnswers = totalQuestions - correctAnswers;
   const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
 
-  // Đánh giá kết quả
+  // Đánh giá kết quả (giữ nguyên logic)
   let message = "";
   let messageColor = "";
   
   if (percentage === 100) {
-    message = "Xuất sắc! Tai nghe siêu phàm 🎧";
+    message = "Xuất sắc! Bạn đã thuộc hết 100% 🤩";
     messageColor = "text-green-600";
   } else if (percentage >= 80) {
-    message = "Làm tốt lắm! Kỹ năng nghe rất tốt";
+    message = "Làm tốt lắm! Ghi nhớ rất tốt";
     messageColor = "text-blue-600";
   } else if (percentage >= 50) {
-    message = "Tạm ổn, hãy luyện nghe thêm nhé";
+    message = "Tạm ổn, hãy ôn lại các thẻ sai nhé";
     messageColor = "text-yellow-600";
   } else {
     message = "Cần cố gắng nhiều hơn!";
@@ -40,7 +41,7 @@ export default function ListenResult() {
   }
 
   return (
-    <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center animate-fadeIn">
         
         {/* Icon Cúp */}
@@ -51,15 +52,16 @@ export default function ListenResult() {
           </div>
         </div>
 
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Luyện Nghe</h2>
+        {/* THAY ĐỔI: Tiêu đề */}
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Ôn Tập</h2>
         <p className={`text-lg font-medium mb-8 ${messageColor}`}>{message}</p>
 
-        {/* Grid thống kê Sai/Đúng */}
+        {/* Grid thống kê Sai/Đúng (Giữ nguyên) */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="p-4 bg-green-50 rounded-xl border border-green-100">
             <div className="flex items-center justify-center gap-2 mb-1">
               <CheckCircle2 className="text-green-600" size={20} />
-              <span className="text-green-800 font-semibold">Đúng</span>
+              <span className="text-green-800 font-semibold">Đã biết</span>
             </div>
             <p className="text-3xl font-bold text-green-700">{correctAnswers}</p>
           </div>
@@ -67,19 +69,19 @@ export default function ListenResult() {
           <div className="p-4 bg-red-50 rounded-xl border border-red-100">
             <div className="flex items-center justify-center gap-2 mb-1">
               <XCircle className="text-red-500" size={20} />
-              <span className="text-red-800 font-semibold">Sai</span>
+              <span className="text-red-800 font-semibold">Chưa biết</span>
             </div>
             <p className="text-3xl font-bold text-red-700">{wrongAnswers}</p>
           </div>
         </div>
 
-        {/* Điểm số % */}
+        {/* Điểm số % (Giữ nguyên) */}
         <div className="mb-8 p-4 bg-gray-50 rounded-xl">
-          <p className="text-gray-500 text-sm mb-1">Điểm số đạt được</p>
+          <p className="text-gray-500 text-sm mb-1">Tỷ lệ thuộc</p>
           <p className="text-4xl font-bold text-gray-800">{percentage}/100</p>
         </div>
 
-        {/* Actions Buttons */}
+        {/* Actions Buttons (Giữ nguyên) */}
         <div className="flex gap-3">
           <button
             onClick={() => navigate('/vocabulary')}
@@ -91,7 +93,7 @@ export default function ListenResult() {
           
           <button
             onClick={() => navigate('/vocabulary')} 
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition shadow-lg shadow-purple-200"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200"
           >
             <RotateCw size={20} />
             Tiếp tục
