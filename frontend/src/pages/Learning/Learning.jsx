@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { assets } from '../../assets/assets';
 import Header from '../../components/Header';
@@ -57,7 +57,7 @@ function Home() {
                                 Bạn đã học được <span className="font-bold text-blue-600">{stats.wordsLearned} từ</span> trong tuần này!
                             </p>
                             <div className="flex flex-wrap gap-4">
-                                <button 
+                                <Link to="/vocabulary"><button 
                                     onClick={handleContinueLearning}
                                     className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center space-x-2 shadow-md hover:shadow-lg"
                                 >
@@ -66,7 +66,7 @@ function Home() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     <span>Tiếp tục học</span>
-                                </button>
+                                </button></Link>
                                 <button 
                                     onClick={handleViewAchievements}
                                     className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition border-2 border-blue-200 flex items-center space-x-2"

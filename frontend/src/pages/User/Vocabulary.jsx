@@ -190,7 +190,7 @@ export default function Vocabulary(){
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
               <img className='w-6 h-6' src={assets.edit}/>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Chính tả</h3>
+            <h3 className="text-xl font-semibold mb-2">Nghe và viết lại</h3>
             <p className="text-purple-100 text-sm">Luyện viết từ vựng</p>
           </div>
 
@@ -198,8 +198,8 @@ export default function Vocabulary(){
             <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
               <img className='w-6 h-6' src={assets.headphone}/>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Nghe phát âm</h3>
-            <p className="text-orange-100 text-sm">Luyện nghe và phát âm</p>
+            <h3 className="text-xl font-semibold mb-2">Nghe và chọn đáp án</h3>
+            <p className="text-orange-100 text-sm">Luyện nghe phát âm và chọn đáp án</p>
           </div>
         </div>
 

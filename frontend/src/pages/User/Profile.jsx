@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
     Pencil, User, Camera, Mail, Phone, Layers,
-    CalendarDays, MapPin, Briefcase, Target
+    CalendarDays, MapPin, Briefcase, Target, LogOut
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { assets } from '../../assets/assets';
@@ -272,7 +272,7 @@ export default function Profile() {
                                         // Copy các class từ nút "Chỉnh sửa"
                                         className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition text-sm"
                                     >
-                                        <Layers className='text-primary-blue' />
+                                        <LogOut size={14}/>
                                         Đăng xuất
                                     </button>
                                 </>
@@ -299,7 +299,7 @@ export default function Profile() {
                                         // Copy các class từ nút "Chỉnh sửa"
                                         className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition text-sm"
                                     >
-                                        <Layers className='text-primary-blue' />
+                                        <LogOut size={14} />
                                         Đăng xuất
                                     </button>
                                 </>
