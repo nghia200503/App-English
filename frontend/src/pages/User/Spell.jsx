@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios'; // Dùng api (axios)
 import { AlertCircle, Volume2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { studySessionService } from '../../services/studySessionService';
+import { updateWordProgress } from '../../services/progressService';
 
 export default function Spell() {
   const [words, setWords] = useState([]);
@@ -67,7 +68,7 @@ export default function Spell() {
   // Tự động phát âm khi chuyển từ
   useEffect(() => {
     if (words.length > 0 && !loading) {
-      playAudio();
+      // playAudio();
       inputRef.current?.focus(); // Tự động focus vào input
     }
   }, [currentWordIndex, words, loading]);
@@ -131,20 +132,36 @@ export default function Spell() {
 
   // 6. Xem kết quả
   const handleViewResults = async () => {
-    await studySessionService.saveSession({
-        mode: 'spell',
-        totalQuestions: questions.length,
-        correctAnswers: score,
-        score: Math.round((score / questions.length) * 10) 
-    });
-    localStorage.removeItem('spellSettings');
-    navigate('/vocabulary/spell/result', { 
-      state: { 
-        score: score, 
-        totalQuestions: questions.length,
-        correctCount: correctCount
-      } 
-    });
+    try {
+      // Lưu kết quả session vào DB
+      await studySessionService.saveSession({
+          mode: 'spell',
+          totalQuestions: words.length, // SỬA: questions -> words
+          correctAnswers: correctCount, // Lưu số câu đúng
+          score: score                  // Lưu tổng điểm tích lũy
+      });
+      
+      localStorage.removeItem('spellSettings');
+      
+      // Chuyển trang
+      navigate('/vocabulary/spell/result', { 
+        state: { 
+          score: score, 
+          totalQuestions: words.length, // SỬA: questions -> words
+          correctCount: correctCount
+        } 
+      });
+    } catch (error) {
+      console.error("Lỗi khi lưu kết quả:", error);
+      // Vẫn chuyển trang dù lỗi lưu API để user không bị kẹt
+      navigate('/vocabulary/spell/result', { 
+        state: { 
+          score: score, 
+          totalQuestions: words.length, 
+          correctCount: correctCount
+        } 
+      });
+    }
   };
 
   // 7. Thoát

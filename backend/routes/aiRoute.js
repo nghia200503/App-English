@@ -1,9 +1,9 @@
 import express from 'express';
-import { chatWithAI } from '../controllers/aiController.js';
+import { getRecommendWords } from '../controllers/aiController.js';
+import { protectedRoute } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// POST /api/ai/chat
-router.post('/chat', chatWithAI);
+router.get('/recommend', protectedRoute, getRecommendWords);
 
 export default router;

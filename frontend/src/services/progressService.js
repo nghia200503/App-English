@@ -1,8 +1,8 @@
-import axiosInstance from "../libs/axios";
+import api from "../libs/axios";
 
 export const updateWordProgress = async (wordId, method, isCorrect = false) => {
     try {
-        const response = await axiosInstance.post("/progress/update", {
+        const response = await api.post("/progress/update", {
             wordId,
             method,   // 'flashcard', 'listen', 'quiz', 'spelling'
             isCorrect // true/false (chỉ dùng cho listen, quiz, spelling)
@@ -16,7 +16,7 @@ export const updateWordProgress = async (wordId, method, isCorrect = false) => {
 
 export const getMyProgress = async () => {
     try {
-        const response = await axiosInstance.get("/progress");
+        const response = await api.get("/progress");
         return response.data;
     } catch (error) {
         console.error("Failed to get progress:", error);

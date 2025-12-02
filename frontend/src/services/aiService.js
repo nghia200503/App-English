@@ -17,5 +17,14 @@ export const aiService = {
         text: 'Lỗi kết nối đến máy chủ AI.' 
       };
     }
+  },
+
+  getRecommendations: async () => {
+    try {
+      const response = await api.get('/ai/recommend');
+      return response.data;
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Lỗi" };
+    }
   }
 };

@@ -5,6 +5,7 @@ import { assets } from '../../assets/assets';
 import Header from '../../components/Header';
 import { BookOpen } from 'lucide-react';
 import Chatbot from '../../components/Chatbot';
+import RecommendSection from '../../components/RecommendSection';
 
 function Home() {
     const navigate = useNavigate();
@@ -89,6 +90,8 @@ function Home() {
                         </div>
                     </div>
                 </div>
+
+                <RecommendSection />
 
                 {/* Reminder Card */}
                 {showReminder && (

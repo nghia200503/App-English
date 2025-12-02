@@ -41,4 +41,5 @@ const progressSchema = new mongoose.Schema({
 // Đảm bảo mỗi user chỉ có 1 record progress cho 1 từ
 progressSchema.index({ userId: 1, wordId: 1 }, { unique: true });
 
-export default mongoose.model("Progress", progressSchema);
+const progressModel = mongoose.model("Progress", progressSchema);
+export default progressModel;
