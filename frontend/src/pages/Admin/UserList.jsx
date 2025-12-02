@@ -31,7 +31,7 @@ export default function UserList() {
             setLoading(true);
             // Sử dụng authService thay vì api.get
             const response = await authService.getAllUsers(page, pagination.itemsPerPage);
-            
+
             if (response.success) {
                 setUsers(response.data);
                 setPagination(response.pagination);
@@ -49,7 +49,7 @@ export default function UserList() {
             setDeleting(true); // Bắt đầu xóa
             await api.delete(`/users/delete/${userId}`); // Vẫn dùng api trực tiếp vì authService không có
             toast.success("Xóa người dùng thành công");
-            
+
             // Logic tải lại danh sách sau khi xóa
             if (users.length === 1 && currentPage > 1) {
                 setCurrentPage(currentPage - 1);
@@ -99,7 +99,7 @@ export default function UserList() {
         const pages = [];
         const maxPagesToShow = 5;
         const { totalPages } = pagination;
-        
+
         if (totalPages <= maxPagesToShow) {
             for (let i = 1; i <= totalPages; i++) pages.push(i);
         } else {
@@ -114,7 +114,7 @@ export default function UserList() {
         return pages;
     };
 
-    
+
     const startIndex = (currentPage - 1) * pagination.itemsPerPage;
 
     return (
@@ -135,7 +135,7 @@ export default function UserList() {
                         // Trạng thái Rỗng
                         <div className="flex flex-col items-center justify-center h-64">
                             <p className="text-gray-600 mb-4">Không tìm thấy người dùng nào.</p>
-                            <button 
+                            <button
                                 onClick={() => navigate('/admin/user-add')}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                             >
@@ -154,9 +154,9 @@ export default function UserList() {
                                     className="cursor-pointer flex items-center gap-2 border-2 bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition"
                                 >
                                     {/* Icon user_add cần màu trắng */}
-                                    <img 
-                                        className="w-6 h-6" 
-                                        src={assets.user_add} 
+                                    <img
+                                        className="w-6 h-6"
+                                        src={assets.user_add}
                                         alt="Add User"
                                     />
                                     Thêm người dùng
@@ -191,11 +191,10 @@ export default function UserList() {
                                                     <button
                                                         key={page}
                                                         onClick={() => goToPage(page)}
-                                                        className={`px-4 py-2 rounded-lg border transition-colors ${
-                                                        currentPage === page
-                                                            ? 'bg-blue-600 text-white border-blue-600'
-                                                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                                        }`}
+                                                        className={`px-4 py-2 rounded-lg border transition-colors ${currentPage === page
+                                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                                            }`}
                                                     >
                                                         {page}
                                                     </button>
@@ -220,10 +219,11 @@ export default function UserList() {
                                 <table className="min-w-full bg-white">
                                     <thead className="bg-gray-800 text-white">
                                         <tr>
-                                            <th className="py-3 px-4 text-left w-20">STT</th> 
+                                            <th className="py-3 px-4 text-left w-20">STT</th>
                                             <th className="py-3 px-4 text-left">Avatar</th>
                                             <th className="py-3 px-4 text-left">Username</th>
                                             <th className="py-3 px-4 text-left">Tên hiển thị</th>
+                                            <th className="py-3 px-4 text-center">Level</th>
                                             <th className="py-3 px-4 text-left">Email</th>
                                             <th className="py-3 px-4 text-left">Điện thoại</th>
                                             <th className="py-3 px-4 text-left">Vai trò</th>
@@ -236,8 +236,8 @@ export default function UserList() {
                                                 {/* Cập nhật STT theo trang */}
                                                 <td className="py-3 px-4">{startIndex + index + 1}</td>
                                                 <td className="py-3 px-4">
-                                                    <img 
-                                                        src={user.avatarUrl || assets.user_avatar} 
+                                                    <img
+                                                        src={user.avatarUrl || assets.user_avatar}
                                                         alt={user.username}
                                                         className="w-10 h-10 rounded-full object-contain"
                                                         onError={(e) => { e.target.src = assets.user_avatar; }}
@@ -245,6 +245,11 @@ export default function UserList() {
                                                 </td>
                                                 <td className="py-3 px-4 font-medium">{user.username}</td>
                                                 <td className="py-3 px-4">{user.displayName}</td>
+                                                <td className="py-3 px-4 text-center">
+                                                    <span className="bg-purple-100 text-purple-800 font-semibold px-2.5 py-0.5 rounded">
+                                                        {user.level || 1}
+                                                    </span>
+                                                </td>
                                                 <td className="py-3 px-4">{user.email}</td>
                                                 <td className="py-3 px-4">{user.phone || 'Chưa cập nhật'}</td>
                                                 <td className="py-3 px-4">{getRoleBadge(user.role)}</td>
@@ -256,7 +261,7 @@ export default function UserList() {
                                                             className="p-2 border-2 border-yellow-500 cursor-pointer hover:bg-yellow-200 rounded-lg"
                                                             title="Sửa"
                                                         >
-                                                            <img className='w-5 h-5' src={assets.update} alt="Edit"/>
+                                                            <img className='w-5 h-5' src={assets.update} alt="Edit" />
                                                         </button>
                                                         {/* Nút Xóa */}
                                                         <button
@@ -264,7 +269,7 @@ export default function UserList() {
                                                             className="p-2 border-2 border-red-500 cursor-pointer hover:bg-red-200 rounded-lg"
                                                             title="Xóa"
                                                         >
-                                                            <img className='w-5 h-5' src={assets.trash} alt="Delete"/>
+                                                            <img className='w-5 h-5' src={assets.trash} alt="Delete" />
                                                         </button>
                                                     </div>
                                                 </td>

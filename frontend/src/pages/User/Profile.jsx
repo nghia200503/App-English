@@ -40,6 +40,12 @@ export default function Profile() {
     const { user, loading, updateProfile } = useAuthStore();
     const [isEditing, setIsEditing] = useState(false);
 
+    // Mỗi level cần 100 * currentLevel XP để lên cấp tiếp theo
+    const currentLevel = user.level;
+    const currentXP = user.experiencePoints;
+    const xpToNextLevel = currentLevel * 100;
+    const progressPercent = Math.min((currentXP / xpToNextLevel) * 100, 100);
+
     // State cho form
     const [formData, setFormData] = useState({
         displayName: '',
@@ -207,7 +213,6 @@ export default function Profile() {
         <div className="min-h-screen bg-slate-50">
             <Header />
             <div className="max-w-7xl mx-auto pt-4 pb-4">
-
                 <form onSubmit={handleSubmit}>
                     {/* 1. Banner hồ sơ */}
                     <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -246,11 +251,29 @@ export default function Profile() {
                                 <p className="text-gray-500 mt-1 flex items-center gap-1">
                                     <Mail size={20} />{user.email}
                                 </p>
-                                {/* Yêu cầu 2: Hiển thị Ngày tham gia */}
 
+                                {/* Yêu cầu 2: Hiển thị Ngày tham gia */}
                                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
                                     <span><CalendarDays size={20} /></span>Ngày tham gia: {formatDate(user.createdAt)}
                                 </p>
+
+                                {/* Hiển thị level và xp */}
+                                <div className="mt-4 w-full max-w-md">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <span className="font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded text-sm">
+                                            Level {currentLevel}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {currentXP} / {xpToNextLevel} XP
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div
+                                            className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                                            style={{ width: `${progressPercent}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -272,7 +295,7 @@ export default function Profile() {
                                         // Copy các class từ nút "Chỉnh sửa"
                                         className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition text-sm"
                                     >
-                                        <LogOut size={14}/>
+                                        <LogOut size={14} />
                                         Đăng xuất
                                     </button>
                                 </>

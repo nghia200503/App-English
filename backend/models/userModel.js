@@ -59,6 +59,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true,
         maxlength: 500
+    },
+    level: {
+        type: Number,
+        default: 1
+    },
+    experiencePoints: {
+        type: Number,
+        default: 0
     }
     
 },{
