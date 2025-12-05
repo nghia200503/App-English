@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Volume2, Search } from 'lucide-react';
+import { Volume2, Search, Layers, CheckSquare, Edit3, Headphones, BookOpen, Filter } from 'lucide-react';
 // Import service
 import { wordService } from '../../services/wordService';
 import { topicService } from '../../services/topicService';
@@ -158,176 +158,235 @@ export default function Vocabulary(){
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 font-sans">
       <Header />
       
-      <div className="max-w-7xl pt-5 mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Học từ vựng</h1>
-          <p className="text-gray-600">Khám phá và học các từ vựng tiếng Anh mới</p>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        
+        {/* 1. Header Section */}
+
+        {/* 2. Learning Modes Grid (Cards đẹp hơn) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          
+          {/* Flashcard */}
+          <div 
+            onClick={() => setIsPopupOpen(true)} 
+            className="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-slate-100 overflow-hidden"
+          >
+            {/* Background Gradient trang trí */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+            
+            <div className="relative z-10">
+              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <Layers size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">Flashcard</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Lật thẻ để ghi nhớ từ vựng và định nghĩa một cách trực quan.
+              </p>
+            </div>
+          </div>
+
+          {/* Trắc nghiệm */}
+          <div 
+            onClick={() => setIsQuizPopupOpen(true)} 
+            className="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-slate-100 overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+            
+            <div className="relative z-10">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <CheckSquare size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-emerald-600 transition-colors">Trắc nghiệm</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Kiểm tra phản xạ và mức độ ghi nhớ qua các câu hỏi đa lựa chọn.
+              </p>
+            </div>
+          </div>
+
+          {/* Nghe và viết */}
+          <div 
+            onClick={() => setIsSpellPopupOpen(true)} 
+            className="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-slate-100 overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+            
+            <div className="relative z-10">
+              <div className="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <Edit3 size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-purple-600 transition-colors">Nghe & Viết</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Luyện kỹ năng nghe và chính tả bằng cách viết lại từ bạn nghe được.
+              </p>
+            </div>
+          </div>
+
+          {/* Nghe và chọn */}
+          <div 
+            onClick={() => setIsListenPopupOpen(true)} 
+            className="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-slate-100 overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+            
+            <div className="relative z-10">
+              <div className="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <Headphones size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-orange-600 transition-colors">Luyện Nghe</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Cải thiện khả năng nghe hiểu và phát âm chuẩn bản xứ.
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Learning Mode Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div onClick={() => setIsPopupOpen(true)} className="bg-primary-blue rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <img className='w-6 h-6' src={assets.flashcard}/>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Flashcard</h3>
-            <p className="text-blue-100 text-sm">Học từ vựng qua thẻ ghi nhớ</p>
-          </div>
-
-          <div onClick={() => setIsQuizPopupOpen(true)} className="bg-primary-green rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <img className='w-6 h-6' src={assets.question}/>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Trắc nghiệm</h3>
-            <p className="text-green-100 text-sm">Kiểm tra kiến thức</p>
-          </div>
-
-          <div onClick={() => setIsSpellPopupOpen(true)} className="bg-primary-purple rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <img className='w-6 h-6' src={assets.edit}/>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Nghe và viết lại</h3>
-            <p className="text-purple-100 text-sm">Luyện viết từ vựng</p>
-          </div>
-
-          <div onClick={() => setIsListenPopupOpen(true)} className="bg-primary-orange rounded-xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-              <img className='w-6 h-6' src={assets.headphone}/>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Nghe và chọn đáp án</h3>
-            <p className="text-orange-100 text-sm">Luyện nghe phát âm và chọn đáp án</p>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Search */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tìm kiếm từ vựng
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        {/* 3. Filters & Stats Bar */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            
+            {/* Left: Inputs */}
+            <div className="flex flex-col md:flex-row gap-4 flex-1">
+              {/* Search */}
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-slate-400" />
+                </div>
                 <input
                   type="text"
-                  placeholder="Nhập từ khóa..."
+                  placeholder="Tìm kiếm từ vựng..."
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm outline-none"
                 />
+              </div>
+
+              {/* Topic Dropdown */}
+              <div className="relative min-w-[200px]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Filter className="h-5 w-5 text-slate-400" />
+                </div>
+                <select
+                  value={selectedTopic}
+                  onChange={handleTopicChange}
+                  className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm outline-none appearance-none cursor-pointer"
+                >
+                  <option value="all">Tất cả danh mục ({pagination.totalItems})</option>
+                  {topics.map(topic => (
+                    <option key={topic._id} value={topic.nameTopic}>
+                      {topic.nameTopic}
+                    </option>
+                  ))}
+                </select>
+                {/* Custom Arrow */}
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
 
-            {/* Topic Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Danh mục
-              </label>
-              <select
-                value={selectedTopic}
-                onChange={handleTopicChange} // <-- SỬA DÙNG HANDLER MỚI
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {/* Dùng totalItems từ pagination để đếm tổng */}
-                <option value="all">Tất cả ({pagination.totalItems})</option>
-                {topics.map(topic => (
-                  <option key={topic._id} value={topic.nameTopic}>
-                    {topic.nameTopic}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="flex gap-4 mt-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">{learnedCount} đã học</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">{notLearnedCount} chưa học</span>
+            {/* Right: Stats Pills */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold">{learnedCount} đã thuộc</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-lg border border-slate-100">
+                <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                <span className="text-sm font-medium">{notLearnedCount} đang học</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Words Display */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            {/* Dùng 'words.length' (số từ trên trang này) */}
-            Hiển thị {words.length} từ vựng
+        {/* 4. Words List Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <BookOpen className="text-blue-600" size={24} />
+          <h2 className="text-xl font-bold text-slate-800">
+            Danh sách từ vựng
+            <span className="ml-2 text-sm font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+              {words.length}
+            </span>
           </h2>
         </div>
 
+        {/* 5. Words Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <p className="mt-4 text-gray-600">Đang tải từ vựng...</p>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-slate-500">Đang tải dữ liệu...</p>
           </div>
-        ) : words.length === 0 ? ( // SỬA: Dùng 'words.length'
-          <div className="text-center py-12 bg-white rounded-xl">
-            <p className="text-gray-500 text-lg">Không tìm thấy từ vựng nào</p>
+        ) : words.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+            <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500 text-lg font-medium">Không tìm thấy từ vựng nào</p>
+            <p className="text-slate-400 text-sm">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* SỬA: Map qua 'words' */}
             {words.map((word) => (
               <div
                 key={word._id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all group"
               >
-                {/* Image */}
-                <div className="h-48 overflow-hidden bg-gray-200">
-                  <img
-                    src={word.image}
-                    alt={word.word}
-                    className="w-full h-full object-contain transform hover:scale-105 transition-transform"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
-                    }}
-                  />
+                {/* Top: Image & Audio */}
+                <div className="flex gap-4 mb-4">
+                  <div className="w-24 h-24 flex-shrink-0 bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
+                    <img
+                      src={word.image}
+                      alt={word.word}
+                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-bold text-slate-800 truncate pr-2" title={word.word}>{word.word}</h3>
+                      <button
+                        onClick={() => playAudio(word.audio)}
+                        className="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"
+                        title="Phát âm thanh"
+                      >
+                        <Volume2 size={18} />
+                      </button>
+                    </div>
+                    <p className="text-slate-500 text-sm font-mono mt-1">{word.pronunciation}</p>
+                    <span className="inline-block mt-2 px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md font-medium border border-slate-200 truncate max-w-full">
+                      {word.topic}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  {/* ... (phần còn lại của card giữ nguyên) ... */}
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-2xl font-bold text-gray-800">{word.word}</h3>
-                    <button
-                      onClick={() => playAudio(word.audio)}
-                      className="p-2 hover:bg-blue-50 rounded-full transition-colors"
-                      title="Phát âm thanh"
-                    >
-                      <Volume2 className="w-5 h-5 text-blue-500" />
-                    </button>
-                  </div>
-                  <p className="text-gray-500 text-sm mb-3">{word.pronunciation}</p>
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-xs rounded-full mb-3">
-                    {word.topic}
-                  </span>
-                  <p className="text-gray-800 font-medium mb-3">{word.translation}</p>
+                {/* Middle: Meaning & Example */}
+                <div className="mb-4">
+                  <p className="text-lg font-semibold text-slate-700 mb-2">{word.translation}</p>
                   {word.example && (
-                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                      <p className="text-sm text-gray-600 italic">{word.example}</p>
+                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                      <p className="text-sm text-slate-600 italic leading-relaxed">"{word.example}"</p>
                     </div>
                   )}
-                  <button
-                    onClick={() => toggleLearned(word._id)}
-                    className={`w-full py-2 rounded-lg font-medium transition-colors ${
-                      learnedWords.has(word._id)
-                        ? 'bg-green-500 text-white hover:bg-green-600'
-                        : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                    }`}
-                  >
-                    {learnedWords.has(word._id) ? '✓ Đã học' : '+ Đánh dấu đã học'}
-                  </button>
                 </div>
+
+                {/* Bottom: Action */}
+                <button
+                  onClick={() => toggleLearned(word._id)}
+                  className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                    learnedWords.has(word._id)
+                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  {learnedWords.has(word._id) ? (
+                    <><CheckSquare size={16} /> Đã thuộc</>
+                  ) : (
+                    <>Đánh dấu đã thuộc</>
+                  )}
+                </button>
               </div>
             ))}
           </div>
@@ -335,19 +394,18 @@ export default function Vocabulary(){
 
         {/* Pagination */}
         {pagination.totalPages > 1 && !loading && (
-          <div className="flex justify-center items-center gap-2 mt-8">
+          <div className="flex justify-center items-center gap-2 mt-10">
             <button
               onClick={() => handlePageChange(pagination.currentPage - 1)}
               disabled={!pagination.hasPrevPage}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600 bg-slate-50"
             >
               Trước
             </button>
             
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {[...Array(pagination.totalPages)].map((_, index) => {
                 const pageNum = index + 1;
-                // Show only nearby pages
                 if (
                   pageNum === 1 ||
                   pageNum === pagination.totalPages ||
@@ -357,10 +415,10 @@ export default function Vocabulary(){
                     <button
                       key={pageNum}
                       onClick={() => handlePageChange(pageNum)}
-                      className={`px-4 py-2 rounded-lg transition-colors ${
+                      className={`w-10 h-10 rounded-lg font-medium transition-all ${
                         pageNum === pagination.currentPage
-                          ? 'bg-blue-500 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                          : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
                       }`}
                     >
                       {pageNum}
@@ -370,7 +428,7 @@ export default function Vocabulary(){
                   pageNum === pagination.currentPage - 2 ||
                   pageNum === pagination.currentPage + 2
                 ) {
-                  return <span key={pageNum} className="px-2">...</span>;
+                  return <span key={pageNum} className="px-2 text-slate-400 self-end mb-2">...</span>;
                 }
                 return null;
               })}
@@ -379,38 +437,19 @@ export default function Vocabulary(){
             <button
               onClick={() => handlePageChange(pagination.currentPage + 1)}
               disabled={!pagination.hasNextPage}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600 bg-slate-50"
             >
               Sau
             </button>
           </div>
         )}
 
-        {/* Popup (component này đã đúng) */}
-        <FlashcardPopup 
-          isOpen={isPopupOpen}
-          onClose={() => setIsPopupOpen(false)}
-          onStartLearn={handleStartLearn}
-        />
-
-        <QuizPopup
-          isOpen={isQuizPopupOpen}
-          onClose={() => setIsQuizPopupOpen(false)}
-          onStartQuiz={handleStartQuiz}
-        />
-
-        <SpellPopup
-          isOpen={isSpellPopupOpen}
-          onClose={() => setIsSpellPopupOpen(false)}
-          onStartSpell={handleStartSpell}
-        />
-
-        <ListenPopup
-          isOpen={isListenPopupOpen}
-          onClose={() => setIsListenPopupOpen(false)}
-          onStartListen={handleStartListen}
-        />
+        {/* Popups */}
+        <FlashcardPopup isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} onStartLearn={handleStartLearn} />
+        <QuizPopup isOpen={isQuizPopupOpen} onClose={() => setIsQuizPopupOpen(false)} onStartQuiz={handleStartQuiz} />
+        <SpellPopup isOpen={isSpellPopupOpen} onClose={() => setIsSpellPopupOpen(false)} onStartSpell={handleStartSpell} />
+        <ListenPopup isOpen={isListenPopupOpen} onClose={() => setIsListenPopupOpen(false)} onStartListen={handleStartListen} />
       </div>
     </div>
   );
-};
+}

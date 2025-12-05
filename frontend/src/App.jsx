@@ -27,6 +27,8 @@ import ListenResult from "./pages/User/ListenResult.jsx";
 import Profile from "./pages/User/Profile.jsx";
 import ProgressPage from "./pages/User/ProgressPage.jsx";
 import FlashcardResult from "./pages/User/FlashcardResult.jsx";
+import Leaderboard from "./pages/User/Leaderboard.jsx";
+import PersonalDictionary from "./pages/User/PersonalDictionary.jsx";
 
 // Component Loading
 // const PageLoader = () => (
@@ -59,6 +61,8 @@ function App() {
             <Route path='/vocabulary/listen' element={<Listen />} />
             <Route path='/vocabulary/listen/result' element={<ListenResult />} />
             <Route path='/progress' element={<ProgressPage />} />
+            <Route path='/leaderboard' element={<Leaderboard />} />
+            <Route path='/my-dictionary' element={<PersonalDictionary />} />
           </Route>
 
 

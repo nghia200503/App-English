@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../libs/axios'; // Dùng api (axios) để gọi
+import api from '../../libs/axios';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { studySessionService } from '../../services/studySessionService';
+import { updateWordProgress } from '../../services/progressService';
+// ĐÃ XÓA: import studySessionService để tránh lưu 2 lần
 
-// --- TẤT CẢ LOGIC (HÀM, STATE, EFFECTS) ĐƯỢC GIỮ NGUYÊN ---
-
-// Hàm xáo trộn mảng (Fisher-Yates shuffle)
 function shuffleArray(array) {
   let currentIndex = array.length, randomIndex;
   while (currentIndex !== 0) {
@@ -18,22 +16,15 @@ function shuffleArray(array) {
   return array;
 }
 
-// Hàm tạo câu hỏi
 const generateQuestions = (words) => {
-  if (words.length < 4) {
-    // Không đủ từ để tạo câu hỏi 4 lựa chọn
-    return []; 
-  }
+  if (words.length < 4) return []; 
 
-  return words.map((word, index) => {
+  return words.map((word) => {
     const correctAnswer = word.translation;
-    
-    // Lấy 3 câu trả lời sai từ các từ khác
     let incorrectOptions = [];
     while (incorrectOptions.length < 3) {
       const randomIndex = Math.floor(Math.random() * words.length);
       const randomWord = words[randomIndex];
-      // Đảm bảo không trùng với từ hiện tại và không trùng lặp
       if (randomWord._id !== word._id && !incorrectOptions.includes(randomWord.translation)) {
         incorrectOptions.push(randomWord.translation);
       }
@@ -55,7 +46,7 @@ const generateQuestions = (words) => {
 export default function Quiz() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null); // 'A', 'B', 'C', 'D'
+  const [selectedAnswer, setSelectedAnswer] = useState(null); 
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
   
@@ -63,7 +54,6 @@ export default function Quiz() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // 1. Lấy cài đặt và fetch từ vựng
   useEffect(() => {
     const settingsData = localStorage.getItem('quizSettings');
     if (!settingsData) {
@@ -103,7 +93,6 @@ export default function Quiz() {
     }
   };
 
-  // 3. Xử lý khi chọn câu trả lời
   const handleAnswerSelect = (option) => {
     if (isAnswered) return; 
     const currentQuestion = questions[currentQuestionIndex];
@@ -114,13 +103,11 @@ export default function Quiz() {
       setScore(prev => prev + 1);
     }
 
-    // Cập nhật tiến độ từ vựng
     if (currentQuestion.wordId) {
         updateWordProgress(currentQuestion.wordId, 'quiz', isCorrect);
     }
   };
 
-  // 4. Xử lý khi nhấn "Tiếp theo"
   const handleNextQuestion = () => {
     if (!isAnswered) return;
     const nextIndex = currentQuestionIndex + 1;
@@ -131,19 +118,11 @@ export default function Quiz() {
     }
   };
 
-  // 5. Xử lý khi nhấn "Xem kết quả"
-  const handleViewResults = async () => {
-    
-    // --- CẬP NHẬT TÊN HÀM GỌI ---
-    await studySessionService.saveSession({
-        mode: 'quiz',
-        totalQuestions: questions.length,
-        correctAnswers: score,
-        score: Math.round((score / questions.length) * 10) 
-    });
-    // -----------------------------
-
+  const handleViewResults = () => {
+    // --- SỬA: KHÔNG GỌI API SAVE SESSION Ở ĐÂY NỮA ---
     localStorage.removeItem('quizSettings');
+    
+    // Chuyển trang và để QuizResult lưu kết quả
     navigate('/vocabulary/quiz/result', { 
       state: { 
         score: score, 
@@ -152,7 +131,6 @@ export default function Quiz() {
     });
   };
 
-  // 6. Xử lý khi nhấn "Quay lại"
   const handleGoBack = () => {
     if (confirm('Bạn có chắc muốn thoát? Tiến trình sẽ không được lưu.')) {
       localStorage.removeItem('quizSettings');
@@ -160,30 +138,16 @@ export default function Quiz() {
     }
   };
 
-  // --- CÁC TRẠNG THÁI RENDER (LOADING, ERROR) GIỮ NGUYÊN ---
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        {/* ... (màn hình loading) ... */}
-      </div>
-    );
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Đang tải...</div>;
   }
   if (error) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        {/* ... (màn hình lỗi) ... */}
-      </div>
-    );
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">{error}</div>;
   }
   if (questions.length === 0) {
-    return (
-       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        {/* ... (màn hình không có câu hỏi) ... */}
-      </div>
-    );
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">Không có câu hỏi.</div>;
   }
 
-  // --- LOGIC RENDER BÀI QUIZ (GIỮ NGUYÊN) ---
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   const optionLabels = ['A', 'B', 'C', 'D'];
@@ -203,13 +167,10 @@ export default function Quiz() {
     return 'border-gray-300 opacity-60';
   };
 
-  // --- PHẦN RENDER BỐ CỤC (ĐÃ THAY ĐỔI) ---
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      {/* THAY ĐỔI: Tăng max-w-2xl thành max-w-4xl */}
       <div className="max-w-4xl mx-auto">
         
-        {/* Header (Giữ nguyên) */}
         <div className="flex justify-between items-center mb-4">
           <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-600 hover:text-blue-600">
             <ArrowLeft size={20} />
@@ -220,7 +181,6 @@ export default function Quiz() {
           </span>
         </div>
 
-        {/* Progress Bar (Giữ nguyên) */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
           <div
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -228,13 +188,9 @@ export default function Quiz() {
           ></div>
         </div>
 
-        {/* Question Card (Giữ nguyên) */}
         <div className="bg-white rounded-lg shadow-xl p-6 md:p-8">
-
-          {/* THAY ĐỔI: Bắt đầu Grid 2 cột */}
           <div className="grid md:grid-cols-2 md:gap-8 items-start">
             
-            {/* CỘT 1: TỪ VỰNG (STICKY) */}
             <div className="md:sticky md:top-24">
               <p className="text-base text-gray-500 mb-2">Từ này có nghĩa là gì?</p>
               <div className="bg-blue-50 p-6 rounded-lg text-center flex items-center justify-center min-h-[150px]">
@@ -244,7 +200,6 @@ export default function Quiz() {
               </div>
             </div>
 
-            {/* CỘT 2: CÁC LỰA CHỌN */}
             <div className="space-y-4 mt-6 md:mt-0">
               {currentQuestion.options.map((option, index) => (
                 <button
@@ -271,20 +226,15 @@ export default function Quiz() {
               ))}
             </div>
           </div>
-          {/* KẾT THÚC Grid 2 cột */}
 
-          {/* Explanation & Next Button (Nằm ngoài grid, vẫn trong card) */}
           {isAnswered && (
             <div className="animate-fadeIn mt-6 border-t pt-6">
-              {/* Explanation */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                 <h4 className="font-bold text-gray-700 mb-1">Giải thích:</h4>
                 <p className="text-gray-600">{currentQuestion.explanation}</p>
               </div>
 
-              {/* Button */}
               {currentQuestionIndex < questions.length - 1 ? (
-                // Nút "Tiếp theo"
                 <button
                   onClick={handleNextQuestion}
                   className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
@@ -292,7 +242,6 @@ export default function Quiz() {
                   Tiếp theo
                 </button>
               ) : (
-                // Nút "Xem kết quả"
                 <button
                   onClick={handleViewResults}
                   className="w-full px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"

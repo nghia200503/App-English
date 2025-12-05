@@ -1,87 +1,147 @@
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Pencil } from 'lucide-react';
+import { Trophy, CheckCircle2, XCircle, ArrowRight, RotateCw, Star } from 'lucide-react';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { studySessionService } from '../../services/studySessionService';
+import { toast } from 'sonner';
 
 export default function SpellResult() {
-  const navigate = useNavigate();
-  const location = useLocation();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { updateUserProgress } = useAuthStore();
+    
+    const hasSaved = useRef(false);
+    const [earnedXP, setEarnedXP] = useState(0);
 
-  // Đọc state
-  const { score, totalWords, correctCount } = location.state || { score: 0, totalWords: 0, correctCount: 0 };
+    // Lấy dữ liệu từ Spell.jsx
+    // correctCount là số từ viết đúng chính tả
+    const { totalQuestions, correctCount } = location.state || { totalQuestions: 0, correctCount: 0 };
 
-  if (totalWords === 0) {
-    // Xử lý vào thẳng trang
+    const correctAnswers = correctCount;
+    const wrongAnswers = totalQuestions - correctAnswers;
+    const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+
+    // --- LOGIC LƯU KẾT QUẢ ---
+    useEffect(() => {
+        const saveResult = async () => {
+            if (totalQuestions === 0 || hasSaved.current) return;
+            hasSaved.current = true;
+
+            const sessionData = {
+                mode: 'spell',
+                totalQuestions: totalQuestions,
+                correctAnswers: correctAnswers,
+                // score ở backend sẽ tự tính dựa trên correctAnswers * XP_PER_QUESTION
+            };
+
+            try {
+                const response = await studySessionService.saveSession(sessionData);
+
+                if (response && response.success) {
+                    const { currentLevel, currentExp, levelUp, xpEarned } = response.userUpdate;
+                    
+                    updateUserProgress(currentExp, currentLevel);
+                    setEarnedXP(xpEarned);
+
+                    if (levelUp) {
+                        toast.success(`🎉 Chúc mừng! Bạn đã lên Level ${currentLevel}!`);
+                    } else if (xpEarned > 0) {
+                        toast.success(`Đã lưu kết quả! +${xpEarned} XP`);
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi lưu kết quả Spelling:", error);
+            }
+        };
+
+        saveResult();
+    }, [totalQuestions, correctAnswers, updateUserProgress]);
+
+    // Logic hiển thị thông báo
+    let message = "";
+    let messageColor = "";
+    if (percentage === 100) { message = "Hoàn hảo! Trí nhớ tuyệt vời 🧠"; messageColor = "text-green-600"; }
+    else if (percentage >= 80) { message = "Rất tốt! Bạn viết rất chính xác"; messageColor = "text-emerald-600"; }
+    else if (percentage >= 50) { message = "Tạm ổn, cẩn thận lỗi chính tả nhé"; messageColor = "text-yellow-600"; }
+    else { message = "Cần luyện viết nhiều hơn!"; messageColor = "text-red-600"; }
+
+    const handleGoBack = () => {
+        navigate('/vocabulary');
+    };
+
+    if (totalQuestions === 0) {
+        return (
+            <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
+                <button onClick={handleGoBack} className="text-green-600 hover:underline">Quay lại</button>
+            </div>
+        );
+    }
+
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">Không có dữ liệu kết quả.</p>
-          <button
-            onClick={() => navigate('/vocabulary')}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            Về trang từ vựng
-          </button>
+        <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center animate-fadeIn">
+
+                {/* Icon Cúp & Badge XP */}
+                <div className="mb-6 relative inline-block">
+                    <div className="absolute inset-0 bg-emerald-200 rounded-full blur-xl opacity-50"></div>
+                    <div className="relative bg-emerald-100 p-4 rounded-full text-emerald-600">
+                        <Trophy size={48} />
+                    </div>
+                    {earnedXP > 0 && (
+                        <div className="absolute -top-2 -right-8 bg-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg animate-bounce flex items-center gap-1">
+                            <Star size={12} fill="currentColor" /> +{earnedXP} XP
+                        </div>
+                    )}
+                </div>
+
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Chính Tả</h1>
+                <p className={`text-lg font-medium mb-8 ${messageColor}`}>{message}</p>
+
+                {/* Thống kê Đúng / Sai */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="p-4 bg-green-50 rounded-xl border border-green-100">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <CheckCircle2 className="text-green-600" size={20} />
+                            <span className="text-green-800 font-semibold">Đúng</span>
+                        </div>
+                        <p className="text-3xl font-bold text-green-700">{correctAnswers}</p>
+                    </div>
+
+                    <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <XCircle className="text-red-500" size={20} />
+                            <span className="text-red-800 font-semibold">Sai</span>
+                        </div>
+                        <p className="text-3xl font-bold text-red-700">{wrongAnswers}</p>
+                    </div>
+                </div>
+
+                {/* Tỷ lệ chính xác */}
+                <div className="mb-8 p-4 bg-gray-50 rounded-xl">
+                    <p className="text-gray-500 text-sm mb-1">Tỷ lệ chính xác</p>
+                    <p className="text-4xl font-bold text-gray-800">{percentage}%</p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleGoBack}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition"
+                    >
+                        <ArrowRight size={20} />
+                        Thoát
+                    </button>
+                    
+                    <button
+                        onClick={() => navigate('/vocabulary/spell')} 
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-200"
+                    >
+                        <RotateCw size={20} />
+                        Luyện tiếp
+                    </button>
+                </div>
+
+            </div>
         </div>
-      </div>
     );
-  }
-
-  const accuracy = totalWords > 0 ? Math.round((correctCount / totalWords) * 100) : 0;
-
-  const handleRetry = () => {
-    // Quay lại trang Vocabulary để chọn bài mới
-    navigate('/vocabulary'); 
-  };
-
-  const handleGoBack = () => {
-    navigate('/vocabulary');
-  };
-
-  return (
-    <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-        
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Pencil className="text-green-600" size={32} />
-        </div>
-
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Hoàn thành!</h1>
-        <p className="text-gray-600 mb-8">Bạn đã hoàn thành bài luyện chính tả</p>
-
-        {/* Stats */}
-        <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-sm text-gray-500">Tổng từ</p>
-              <p className="text-3xl font-bold text-green-600">{totalWords}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-500">Điểm số</p>
-              <p className="text-3xl font-bold text-green-600">{score}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-500">Độ chính xác</p>
-              <p className="text-3xl font-bold text-green-600">{accuracy}%</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handleGoBack}
-            className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition"
-          >
-            Quay lại
-          </button>
-          <button
-            onClick={handleRetry} // Quay về Vocabulary
-            className="flex-1 px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-          >
-            Làm bài khác
-          </button>
-        </div>
-
-      </div>
-    </div>
-  );
 }

@@ -1,8 +1,10 @@
+// src/pages/User/Listen.jsx
+
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios';
 import { AlertCircle, Volume2, ArrowLeft, Info, Loader2 } from 'lucide-react';
-import { studySessionService } from '../../services/studySessionService';
+// import studySessionService đã được xóa để tránh gọi API 2 lần
 
 // Hàm helper xáo trộn mảng
 function shuffleArray(array) {
@@ -23,7 +25,7 @@ export default function Listen() {
   const [isAnswered, setIsAnswered] = useState(false);
   const [hasListened, setHasListened] = useState(false);
   const [showListenWarning, setShowListenWarning] = useState(false);
-  const [score, setScore] = useState(0); // score giờ sẽ đếm số câu đúng (1, 2, 3...) giống Quiz
+  const [score, setScore] = useState(0); // score đếm số câu đúng
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,7 +57,7 @@ export default function Listen() {
         return;
       }
       
-      // Luôn đảm bảo fetch đủ 4 từ để làm đáp án nhiễu nếu có thể
+      // Luôn đảm bảo fetch đủ từ để làm đáp án nhiễu nếu có thể
       const shuffledWords = shuffleArray([...allWords]);
       
       // Số câu hỏi cần tạo
@@ -72,7 +74,7 @@ export default function Listen() {
         // Lấy tối đa 3 đáp án sai
         let distractors = shuffledOthers.slice(0, 3);
         
-        // Fallback nếu không đủ từ trong DB (lặp lại từ để giữ layout)
+        // Fallback nếu không đủ từ trong DB
         while (distractors.length < 3 && allWords.length > 1) {
              distractors.push(shuffledOthers[0] || correctWord); 
         }
@@ -128,7 +130,7 @@ export default function Listen() {
     const isCorrect = selectedWord === currentQuestion.correctAnswer;
     
     if (isCorrect) {
-      setScore(prev => prev + 1); // Tăng 1 điểm cho mỗi câu đúng (giống Quiz)
+      setScore(prev => prev + 1); // Tăng 1 điểm cho mỗi câu đúng
     }
   };
 
@@ -150,14 +152,8 @@ export default function Listen() {
   };
   
   const handleViewResults = async () => {
-    // Lưu vào lịch sử học tập (Database)
-    // score ở đây là số câu đúng.
-    await studySessionService.saveSession({
-        mode: 'listen',
-        totalQuestions: quizQuestions.length, 
-        correctAnswers: score, 
-        score: Math.round((score / quizQuestions.length) * 10) // Quy đổi ra thang điểm 10 để lưu DB
-    });
+    // --- ĐÃ SỬA: KHÔNG GỌI API Ở ĐÂY NỮA ---
+    // Việc lưu session sẽ do ListenResult.jsx đảm nhiệm
     
     localStorage.removeItem('listenSettings');
     

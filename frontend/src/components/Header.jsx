@@ -1,12 +1,12 @@
-import { useState } from "react"; 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { useAuthStore } from "../stores/useAuthStore";
-import { Menu, X } from "lucide-react"; 
+import { Menu, X } from "lucide-react";
 
 export default function Header() {
     const { user } = useAuthStore();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     // Hàm để đóng menu khi nhấn vào link (trên mobile)
     const handleMobileLinkClick = () => {
         setIsMobileMenuOpen(false);
@@ -29,14 +29,14 @@ export default function Header() {
                         <Link to="/vocabulary" className="text-gray-600 hover:text-gray-900 transition">
                             Học từ vựng
                         </Link>
-                        <Link to="/practice" className="text-gray-600 hover:text-gray-900 transition">
-                            Luyện tập
+                        <Link to="/leaderboard" className="text-gray-600 hover:text-gray-900 transition">
+                            Xếp hạng
                         </Link>
                         <Link to="/progress" className="text-gray-600 hover:text-gray-900 transition">
                             Thống kê
                         </Link>
-                        <Link to="/dictionary" className="text-gray-600 hover:text-gray-900 transition">
-                            Từ điển
+                        <Link to="/my-dictionary" className="text-gray-600 hover:text-gray-900 transition">
+                            Thư viện
                         </Link>
                     </nav>
 

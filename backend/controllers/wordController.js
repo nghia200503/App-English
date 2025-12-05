@@ -29,7 +29,6 @@ const uploadToCloudinary = (fileBuffer, resourceType = 'auto', folder = 'words')
 // Lấy tất cả từ vựng với phân trang
 export const wordList = async (req, res) => {
   try {
-    // --- LẤY TẤT CẢ THAM SỐ TỪ QUERY ---
     const page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
     const topic = req.query.topic; // Lọc theo tên danh mục
@@ -44,7 +43,7 @@ export const wordList = async (req, res) => {
     const skip = (page - 1) * limit;
 
     // --- TẠO QUERY ĐỘNG ---
-    const query = {};
+    const query = { owner: null };
     
     if (topic && topic !== 'all') {
       // Lọc theo tên danh mục (đúng với 'wordModel' của bạn)
@@ -54,11 +53,6 @@ export const wordList = async (req, res) => {
     if (search) {
       // Tìm kiếm không phân biệt hoa thường
       query.word = { $regex: search, $options: 'i' };
-      // Nếu bạn muốn tìm cả trong 'translation':
-      // query.$or = [
-      //   { word: { $regex: search, $options: 'i' } },
-      //   { translation: { $regex: search, $options: 'i' } }
-      // ];
     }
     // ------------------------
 
@@ -363,4 +357,59 @@ export const wordAddBulk = async (req, res) => {
     console.error("Lỗi khi thêm từ vựng hàng loạt:", err);
     res.status(500).json({ success: false, error: "Lỗi server khi thêm hàng loạt" });
   }
+};
+
+// --- CÁC HÀM MỚI CHO USER ---
+
+// 1. Lấy từ vựng CỦA RIÊNG USER
+export const getUserWords = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { topic } = req.query;
+        
+        const query = { owner: userId };
+        
+        // Nếu có lọc theo topic
+        if (topic && topic !== 'all') {
+            query.topic = topic;
+        }
+
+        const words = await wordModel.find(query).sort({ createdAt: -1 });
+        res.json({ success: true, data: words });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+};
+
+// 2. User tạo từ vựng mới
+export const createUserWord = async (req, res) => {
+    try {
+        const { word, translation, topic, example, pronunciation } = req.body;
+        const userId = req.user._id;
+
+        // Validate cơ bản
+        if (!word || !translation || !topic) {
+            return res.status(400).json({ message: "Thiếu thông tin bắt buộc (Từ, Nghĩa, Chủ đề)" });
+        }
+
+        // User tạo nhanh thường không có file media ngay
+        // Nếu muốn hỗ trợ upload, cần dùng multer và logic giống wordAdd
+        
+        const newWord = new wordModel({
+            word,
+            translation,
+            topic,
+            example: example || "",
+            pronunciation: pronunciation || "",
+            owner: userId,
+            // Các trường media để trống
+            image: "", imagePublicId: "", audio: "", audioPublicId: ""
+        });
+
+        await newWord.save();
+        res.status(201).json({ success: true, data: newWord });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };

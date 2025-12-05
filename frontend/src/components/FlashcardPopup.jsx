@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { X, Layers, AlertCircle } from 'lucide-react';
-import { topicService } from '../services/topicService'; 
+import { topicService } from '../services/topicService';
+import { wordService } from '../services/wordService';
 import { toast } from 'sonner';
 
 // Tạo một đối tượng 'Tất cả'
-const allTopicsOption = { 
-  _id: 'all', 
-  nameTopic: 'Tất cả', 
+const allTopicsOption = {
+  _id: 'all',
+  nameTopic: 'Tất cả',
   meaning: 'Bao gồm tất cả chủ đề',
   wordCount: 0 // Sẽ được cập nhật sau
 };
@@ -23,51 +24,55 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
 
   useEffect(() => {
     if (isOpen) {
-      fetchTopics();
+      fetchData();
     }
   }, [isOpen]);
 
-  const fetchTopics = async () => {
+  const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await topicService.getAllTopicsDropdown();
-      
-      if (response.success && response.data) {
-        const topicsFromServer = response.data;
-        // Tính tổng số từ
-        const totalCount = topicsFromServer.reduce((acc, t) => acc + (t.wordCount || 0), 0);
-        
-        // Cập nhật 'wordCount' cho 'Tất cả chủ đề'
-        const allTopicWithCount = { ...allTopicsOption, wordCount: totalCount };
+      // Gọi song song 2 API: Lấy danh sách chủ đề và Lấy tổng số từ hệ thống
+      const [topicsRes, wordsRes] = await Promise.all([
+        topicService.getAllTopicsDropdown(),
+        wordService.getAllWords(1, 1, 'all') // Gọi lấy 1 từ chỉ để lấy pagination.totalItems
+      ]);
 
-        setTopics([allTopicWithCount, ...topicsFromServer]);
-        setSelectedTopic(allTopicWithCount); // Mặc định chọn 'Tất cả'
-        setMaxWordsInTopic(totalCount); // Mặc định là tổng
-        
-        // Mặc định là 10, hoặc tổng số từ nếu tổng < 10
-        setWordLimit(totalCount > 0 ? Math.min(10, totalCount).toString() : '10');
+      let totalSystemWords = 0;
+      let topicsList = [];
 
-        if (topicsFromServer.length === 0) {
-          setError('Chưa có danh mục nào.');
-        }
-      } else {
-        setError('Không thể tải danh sách danh mục');
+      if (wordsRes.success) {
+        totalSystemWords = wordsRes.pagination.totalItems;
       }
+
+      if (topicsRes.success && topicsRes.data) {
+        topicsList = topicsRes.data;
+      }
+
+      // Cập nhật option "Tất cả" với số lượng thực tế từ API words
+      const allTopicWithCount = { ...allTopicsOption, wordCount: totalSystemWords };
+
+      setTopics([allTopicWithCount, ...topicsList]);
+      setSelectedTopic(allTopicWithCount); // Mặc định chọn tất cả
+      setMaxWordsInTopic(totalSystemWords); // Max của tất cả là tổng số từ
+
+      // Logic set giới hạn mặc định
+      setWordLimit(totalSystemWords > 0 ? Math.min(10, totalSystemWords).toString() : '10');
+
     } catch (err) {
-      console.error('Lỗi khi tải danh mục:', err);
+      console.error('Lỗi tải dữ liệu:', err);
       setError('Lỗi kết nối đến server.');
-      toast.error("Không thể tải danh sách chủ đề");
+      toast.error("Không thể tải dữ liệu học tập");
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Xử lý khi chọn chủ đề
   const handleTopicChange = (e) => {
     const topic = topics.find(t => t._id === e.target.value) || allTopicsOption;
     setSelectedTopic(topic);
-    
+
     const newMax = topic.wordCount || 0;
     setMaxWordsInTopic(newMax);
 
@@ -86,9 +91,9 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
       setWordLimit('');
       return;
     }
-    
+
     let numValue = parseInt(value);
-    
+
     if (isNaN(numValue) || numValue < 1) {
       numValue = 1;
     }
@@ -96,7 +101,7 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
     if (maxWordsInTopic > 0 && numValue > maxWordsInTopic) {
       numValue = maxWordsInTopic;
     }
-    
+
     setWordLimit(numValue.toString());
   };
 
@@ -105,11 +110,11 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
     const finalLimit = (wordLimit === '' || parseInt(wordLimit) === 0) ? '10' : wordLimit;
 
     if (selectedTopic) {
-      localStorage.setItem('flashcardSettings', JSON.stringify({ 
-        topic: selectedTopic, 
-        limit: finalLimit 
+      localStorage.setItem('flashcardSettings', JSON.stringify({
+        topic: selectedTopic,
+        limit: finalLimit
       }));
-      
+
       if (onStartLearn) {
         onStartLearn(selectedTopic);
       }
@@ -172,7 +177,10 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
                 {/* <option value="">Chọn danh mục</option> */}
                 {topics.map((topic) => (
                   <option key={topic._id} value={topic._id}>
-                    {topic.nameTopic} {topic._id !== 'all' ? `- ${topic.meaning}` : `(${topic.wordCount} từ)`}
+                    {/* Hiển thị Tên + Nghĩa (nếu không phải All) + Số từ (Luôn hiển thị) */}
+                    {topic.nameTopic}
+                    {topic._id !== 'all' ? ` - ${topic.meaning}` : ''}
+                    {` (${topic.wordCount} từ)`}
                   </option>
                 ))}
               </select>
@@ -198,11 +206,10 @@ export default function FlashcardPopup({ isOpen, onClose, onStartLearn }) {
               <button
                 onClick={() => setWordLimit('all')}
                 disabled={loading || maxWordsInTopic === 0}
-                className={`px-4 py-3 rounded-lg border-2 font-medium transition ${
-                  wordLimit === 'all'
+                className={`px-4 py-3 rounded-lg border-2 font-medium transition ${wordLimit === 'all'
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                } disabled:opacity-50`}
+                  } disabled:opacity-50`}
               >
                 Tất cả
               </button>

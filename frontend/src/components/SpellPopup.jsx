@@ -177,6 +177,7 @@
 import { useState, useEffect } from 'react';
 import { X, Pencil, AlertCircle } from 'lucide-react';
 import { topicService } from '../services/topicService'; 
+import { wordService } from '../services/wordService';
 import { toast } from 'sonner';
 
 const allTopicsOption = { 
@@ -198,36 +199,49 @@ export default function SpellPopup({ isOpen, onClose, onStartSpell }) {
 
   useEffect(() => {
     if (isOpen) {
-      fetchTopics();
+      fetchData();
     }
   }, [isOpen]);
 
-  const fetchTopics = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await topicService.getAllTopicsDropdown();
-      if (response.success && response.data) {
-        const topicsFromServer = response.data;
-        const totalCount = topicsFromServer.reduce((acc, t) => acc + (t.wordCount || 0), 0);
-        const allTopicWithCount = { ...allTopicsOption, wordCount: totalCount };
-
-        setTopics([allTopicWithCount, ...topicsFromServer]);
-        setSelectedTopic(allTopicWithCount);
-        setMaxWordsInTopic(totalCount);
-        setWordLimit(totalCount > 0 ? Math.min(10, totalCount).toString() : '10');
-
-      } else {
-        setError('Không thể tải danh sách danh mục');
+  const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Gọi song song 2 API: Lấy danh sách chủ đề và Lấy tổng số từ hệ thống
+        const [topicsRes, wordsRes] = await Promise.all([
+          topicService.getAllTopicsDropdown(),
+          wordService.getAllWords(1, 1, 'all') // Gọi lấy 1 từ chỉ để lấy pagination.totalItems
+        ]);
+        
+        let totalSystemWords = 0;
+        let topicsList = [];
+  
+        if (wordsRes.success) {
+          totalSystemWords = wordsRes.pagination.totalItems;
+        }
+  
+        if (topicsRes.success && topicsRes.data) {
+          topicsList = topicsRes.data;
+        }
+  
+        // Cập nhật option "Tất cả" với số lượng thực tế từ API words
+        const allTopicWithCount = { ...allTopicsOption, wordCount: totalSystemWords };
+  
+        setTopics([allTopicWithCount, ...topicsList]);
+        setSelectedTopic(allTopicWithCount); // Mặc định chọn tất cả
+        setMaxWordsInTopic(totalSystemWords); // Max của tất cả là tổng số từ
+        
+        // Logic set giới hạn mặc định
+        setWordLimit(totalSystemWords > 0 ? Math.min(10, totalSystemWords).toString() : '10');
+  
+      } catch (err) {
+        console.error('Lỗi tải dữ liệu:', err);
+        setError('Lỗi kết nối đến server.');
+        toast.error("Không thể tải dữ liệu học tập");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Lỗi khi tải danh mục:', err);
-      setError('Lỗi kết nối đến server.');
-      toast.error("Không thể tải danh sách chủ đề");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
   
   const handleTopicChange = (e) => {
     const topic = topics.find(t => t._id === e.target.value) || allTopicsOption;

@@ -1,7 +1,7 @@
 // import topicModel from "../models/topicModel.js";
 // import cloudinary from "../libs/cloudinary.js";
 
-// // Lấy tất cả chủ đề với phân trang
+// // Lấy tất cả chủ đề với phân trang (Giữ nguyên)
 // export const topicList = async (req, res) => {
 //   try {
 //     // Lấy page và limit từ query params, mặc định page=1, limit=5
@@ -46,13 +46,13 @@
 //   }
 // };
 
-// // Hàm helper để chuyển buffer sang Data URI
+// // Hàm helper để chuyển buffer sang Data URI (Giữ nguyên)
 // const bufferToDataURI = (file) => {
 //   const b64 = Buffer.from(file.buffer).toString("base64");
 //   return "data:" + file.mimetype + ";base64," + b64;
 // };
 
-// // Lấy 1 chủ đề theo ID
+// // Lấy 1 chủ đề theo ID (Giữ nguyên)
 // export const topicGetById = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -78,7 +78,7 @@
 //   }
 // };
 
-// // Thêm chủ đề mới
+// // Thêm chủ đề mới (Giữ nguyên)
 // export const topicAdd = async (req, res) => {
 //   try {
 //     const { nameTopic, meaning, pronunciation } = req.body;
@@ -95,7 +95,6 @@
 //     // Chuyển buffer sang Data URI
 //     const dataURI = bufferToDataURI(file);
 
-//     // ---- THAY ĐỔI TẠI ĐÂY ----
 //     // 1. Tạo tên thư mục an toàn từ nameTopic
 //     // Ví dụ: "Family & Friends" -> "family_friends"
 //     const safeFolderName = nameTopic
@@ -133,7 +132,7 @@
 //   }
 // };
 
-// // Cập nhật chủ đề
+// // Cập nhật chủ đề (Giữ nguyên)
 // export const topicUpdate = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -198,7 +197,7 @@
 //   }
 // };
 
-// // Hàm helper để xóa ảnh trên Cloudinary
+// // Hàm helper để xóa ảnh trên Cloudinary (Giữ nguyên)
 // const deleteImageFromCloudinary = async (imageUrl) => {
 //   try {
 //     if (!imageUrl) return;
@@ -282,7 +281,7 @@
 //   }
 // };
 
-// // Xóa chủ đề
+// // Xóa chủ đề (Giữ nguyên)
 // export const topicDelete = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -295,10 +294,8 @@
 //       });
 //     }
 
-//     // ---- THAY ĐỔI TẠI ĐÂY ----
 //     // Gọi hàm mới để xóa toàn bộ thư mục
 //     await deleteTopicFolderFromCloudinary(topic.image);
-//     // -------------------------
 
 //     // Xóa trong database
 //     await topicModel.findByIdAndDelete(id);
@@ -319,8 +316,32 @@
 // // Lấy tất cả chủ đề KHÔNG PHÂN TRANG (dùng cho dropdown chọn chủ đề)
 // export const getAllTopics = async (req, res) => {
 //   try {
-//     // Bỏ hết phân trang, chỉ tìm và sắp xếp
-//     const allTopics = await topicModel.find().sort({ nameTopic: 1 }); // Sắp xếp theo tên A-Z cho dễ chọn
+//     // Sử dụng aggregate để join và đếm số từ
+//     const allTopics = await topicModel.aggregate([
+//       {
+//         $lookup: {
+//           from: "words", // Tên collection 'words' (từ wordModel)
+//           localField: "nameTopic", // Khóa của topicModel
+//           foreignField: "topic",   // Khóa của wordModel
+//           as: "wordsInTopic",      // Tên mảng tạm
+//         },
+//       },
+//       {
+//         $addFields: {
+//           // Tạo trường mới 'wordCount' bằng kích thước của mảng tạm
+//           wordCount: { $size: "$wordsInTopic" },
+//         },
+//       },
+//       {
+//         $project: {
+//           // Xóa mảng tạm để không gửi dữ liệu thừa
+//           wordsInTopic: 0,
+//         },
+//       },
+//       {
+//         $sort: { nameTopic: 1 }, // Sắp xếp theo tên A-Z
+//       },
+//     ]);
 
 //     res.json({
 //       success: true,
@@ -334,36 +355,25 @@
 //     });
 //   }
 // };
+
 import topicModel from "../models/topicModel.js";
 import cloudinary from "../libs/cloudinary.js";
-// --- THÊM IMPORT NÀY ---
-import wordModel from "../models/wordModel.js"; // Cần để biết tên collection 'words'
 
-// Lấy tất cả chủ đề với phân trang (Giữ nguyên)
 export const topicList = async (req, res) => {
-  // ... (code của bạn giữ nguyên)
   try {
-    // Lấy page và limit từ query params, mặc định page=1, limit=5
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
-
-    // Tính toán skip
     const skip = (page - 1) * limit;
+    const total = await topicModel.countDocuments({ owner: null }); // Chỉ đếm topic hệ thống
 
-    // Đếm tổng số documents
-    const total = await topicModel.countDocuments();
-
-    // Lấy data với pagination
     const topics = await topicModel
-      .find()
+      .find({ owner: null }) // Chỉ lấy topic hệ thống
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 }); // Sắp xếp mới nhất trước
+      .sort({ createdAt: -1 });
 
-    // Tính tổng số trang
     const totalPages = Math.ceil(total / limit);
 
-    // Trả về kết quả với metadata
     res.json({
       success: true,
       data: topics,
@@ -378,106 +388,75 @@ export const topicList = async (req, res) => {
     });
   } catch (err) {
     console.error("Lỗi server khi lấy danh sách chủ đề:", err);
-    res.status(500).json({
-      success: false,
-      error: "Lỗi server khi lấy tất cả chủ đề",
-    });
+    res.status(500).json({ success: false, error: "Lỗi server" });
   }
 };
 
-// Hàm helper để chuyển buffer sang Data URI (Giữ nguyên)
 const bufferToDataURI = (file) => {
-  // ... (code của bạn giữ nguyên)
   const b64 = Buffer.from(file.buffer).toString("base64");
   return "data:" + file.mimetype + ";base64," + b64;
 };
 
-// Lấy 1 chủ đề theo ID (Giữ nguyên)
 export const topicGetById = async (req, res) => {
-  // ... (code của bạn giữ nguyên)
   try {
     const { id } = req.params;
     const topic = await topicModel.findById(id);
-
-    if (!topic) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy chủ đề",
-      });
-    }
-
-    res.json({
-      success: true,
-      data: topic,
-    });
+    if (!topic)
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy chủ đề" });
+    res.json({ success: true, data: topic });
   } catch (err) {
-    console.error("Lỗi khi lấy chủ đề:", err);
-    res.status(500).json({
-      success: false,
-      error: "Lỗi server khi lấy chủ đề",
-    });
+    res.status(500).json({ success: false, error: "Lỗi server" });
   }
 };
 
-// Thêm chủ đề mới (Giữ nguyên)
 export const topicAdd = async (req, res) => {
-  // ... (code của bạn giữ nguyên)
   try {
     const { nameTopic, meaning, pronunciation } = req.body;
     const file = req.file;
 
-    // Kiểm tra dữ liệu
     if (!nameTopic || !meaning || !pronunciation || !file) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng cung cấp đầy đủ thông tin",
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Vui lòng cung cấp đầy đủ thông tin",
+        });
     }
 
-    // Chuyển buffer sang Data URI
     const dataURI = bufferToDataURI(file);
-
-    // ---- THAY ĐỔI TẠI ĐÂY ----
-    // 1. Tạo tên thư mục an toàn từ nameTopic
-    // Ví dụ: "Family & Friends" -> "family_friends"
     const safeFolderName = nameTopic
       .toLowerCase()
-      .replace(/\s+/g, "_") // Thay khoảng trắng bằng gạch dưới
-      .replace(/[^a-z0-9_]/g, ""); // Loại bỏ ký tự đặc biệt
-
-    // 2. Upload lên Cloudinary với thư mục động
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
     const result = await cloudinary.uploader.upload(dataURI, {
-      folder: `topics/${safeFolderName}`, // Đường dẫn động
+      folder: `topics/${safeFolderName}`,
     });
-    // -------------------------
 
-    // Tạo topic mới trong DB
     const newTopic = new topicModel({
-      nameTopic: nameTopic,
-      meaning: meaning,
-      pronunciation: pronunciation,
+      nameTopic,
+      meaning,
+      pronunciation,
       image: result.secure_url,
+      owner: null, // Admin tạo thì owner là null
     });
 
     await newTopic.save();
-
-    return res.status(201).json({
-      success: true,
-      data: newTopic,
-      message: "Thêm chủ đề thành công",
-    });
+    return res
+      .status(201)
+      .json({
+        success: true,
+        data: newTopic,
+        message: "Thêm chủ đề thành công",
+      });
   } catch (error) {
     console.error("Lỗi khi thêm chủ đề:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi hệ thống khi thêm chủ đề",
-    });
+    return res.status(500).json({ success: false, message: "Lỗi hệ thống" });
   }
 };
 
-// Cập nhật chủ đề (Giữ nguyên)
 export const topicUpdate = async (req, res) => {
-  // ... (code của bạn giữ nguyên)
   try {
     const { id } = req.params;
     const { nameTopic, meaning, pronunciation } = req.body;
@@ -541,46 +520,7 @@ export const topicUpdate = async (req, res) => {
   }
 };
 
-// Hàm helper để xóa ảnh trên Cloudinary (Giữ nguyên)
-const deleteImageFromCloudinary = async (imageUrl) => {
-  // ... (code của bạn giữ nguyên)
-  try {
-    if (!imageUrl) return;
-
-    // URL format: https://res.cloudinary.com/.../upload/v123/topics/animal/file.jpg
-    const urlParts = imageUrl.split("/");
-    const uploadIndex = urlParts.findIndex((part) => part === "upload");
-
-    // Kiểm tra xem 'upload' có tồn tại không và có ít nhất 1 phần tử sau version (v123)
-    if (uploadIndex !== -1 && urlParts.length > uploadIndex + 2) {
-      // Lấy tất cả các phần tử sau version (v123)
-      // Ví dụ: ['topics', 'animal', 'file.jpg']
-      const pathParts = urlParts.slice(uploadIndex + 2);
-
-      // Nối chúng lại để tạo đường dẫn đầy đủ
-      // Ví dụ: 'topics/animal/file.jpg'
-      const fullPathWithExt = pathParts.join("/");
-
-      // Xóa phần mở rộng file (ví dụ: .jpg, .png)
-      // Cách này an toàn ngay cả khi tên file có dấu chấm (vd: file.v2.jpg)
-      const publicId = fullPathWithExt.split(".").slice(0, -1).join(".");
-      // Ví dụ: 'topics/animal/file'
-
-      if (publicId) {
-        await cloudinary.uploader.destroy(publicId);
-        console.log(`Đã xóa ảnh: ${publicId}`);
-      } else {
-        console.warn("Không thể trích xuất publicId từ URL:", imageUrl);
-      }
-    }
-  } catch (error) {
-    console.error("Lỗi khi xóa ảnh trên Cloudinary:", error);
-  }
-};
-
-// Hàm helper để XÓA TOÀN BỘ THƯ MỤC (Giữ nguyên)
 const deleteTopicFolderFromCloudinary = async (imageUrl) => {
-  // ... (code của bạn giữ nguyên)
   try {
     if (!imageUrl) return;
 
@@ -627,81 +567,141 @@ const deleteTopicFolderFromCloudinary = async (imageUrl) => {
   }
 };
 
-// Xóa chủ đề (Giữ nguyên)
 export const topicDelete = async (req, res) => {
-  // ... (code của bạn giữ nguyên)
   try {
     const { id } = req.params;
-
     const topic = await topicModel.findById(id);
-    if (!topic) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy chủ đề",
-      });
+    if (!topic)
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy chủ đề" });
+
+    // Chỉ xóa ảnh trên Cloudinary nếu có
+    if (topic.image) {
+      await deleteTopicFolderFromCloudinary(topic.image);
     }
 
-    // ---- THAY ĐỔI TẠI ĐÂY ----
-    // Gọi hàm mới để xóa toàn bộ thư mục
-    await deleteTopicFolderFromCloudinary(topic.image);
-    // -------------------------
-
-    // Xóa trong database
     await topicModel.findByIdAndDelete(id);
-
-    return res.status(200).json({
-      success: true,
-      message: "Xóa chủ đề thành công",
-    });
+    return res
+      .status(200)
+      .json({ success: true, message: "Xóa chủ đề thành công" });
   } catch (error) {
-    console.error("Lỗi khi xóa chủ đề:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi hệ thống khi xóa chủ đề",
-    });
+    return res.status(500).json({ success: false, message: "Lỗi hệ thống" });
   }
 };
 
-// --- HÀM NÀY ĐÃ ĐƯỢC CẬP NHẬT ---
-// Lấy tất cả chủ đề KHÔNG PHÂN TRANG (dùng cho dropdown chọn chủ đề)
 export const getAllTopics = async (req, res) => {
   try {
-    // Sử dụng aggregate để join và đếm số từ
     const allTopics = await topicModel.aggregate([
+      { $match: { owner: null } },
       {
         $lookup: {
-          from: "words", // Tên collection 'words' (từ wordModel)
-          localField: "nameTopic", // Khóa của topicModel
-          foreignField: "topic",   // Khóa của wordModel
-          as: "wordsInTopic",      // Tên mảng tạm
+          from: "words",
+          let: { topicName: "$nameTopic" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    // [SỬA LỖI TẠI ĐÂY]
+                    // 1. $trim: Cắt khoảng trắng đầu/cuối (ví dụ: "Health " -> "Health")
+                    // 2. $toLower: Chuyển về chữ thường để so sánh không phân biệt hoa thường
+                    {
+                      $eq: [
+                        { $toLower: { $trim: { input: "$topic" } } }, // Field 'topic' bên bảng Words
+                        { $toLower: { $trim: { input: "$$topicName" } } }, // Field 'nameTopic' bên bảng Topics
+                      ],
+                    },
+                    // Chỉ đếm từ vựng hệ thống
+                    { $in: ["$owner", [null, undefined]] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "wordsInTopic",
         },
       },
-      {
-        $addFields: {
-          // Tạo trường mới 'wordCount' bằng kích thước của mảng tạm
-          wordCount: { $size: "$wordsInTopic" },
-        },
-      },
-      {
-        $project: {
-          // Xóa mảng tạm để không gửi dữ liệu thừa
-          wordsInTopic: 0,
-        },
-      },
-      {
-        $sort: { nameTopic: 1 }, // Sắp xếp theo tên A-Z
-      },
+      { $addFields: { wordCount: { $size: "$wordsInTopic" } } },
+      { $project: { wordsInTopic: 0 } },
+      { $sort: { nameTopic: 1 } },
     ]);
 
-    res.json({
-      success: true,
-      data: allTopics,
-    });
+    res.json({ success: true, data: allTopics });
   } catch (err) {
-    console.error("Lỗi khi lấy tất cả chủ đề:", err);
-    res.status(500).json({
-      success: false,
-      error: "Lỗi server khi lấy tất cả chủ đề",
+    console.error("Lỗi khi lấy danh sách chủ đề:", err);
+    res.status(500).json({ success: false, error: "Lỗi server" });
+  }
+};
+
+// --- CÁC HÀM MỚI CHO USER ---
+
+// 1. Lấy danh sách chủ đề CỦA RIÊNG USER
+export const getUserTopics = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Tìm topic của user và đếm số từ trong đó (cũng phải là từ của user)
+    const topics = await topicModel.aggregate([
+      { $match: { owner: userId } },
+      {
+        $lookup: {
+          from: "words",
+          let: { topicName: "$nameTopic" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$topic", "$$topicName"] },
+                    { $eq: ["$owner", userId] }, // Quan trọng: Chỉ đếm từ của user này
+                  ],
+                },
+              },
+            },
+          ],
+          as: "wordsInTopic",
+        },
+      },
+      { $addFields: { wordCount: { $size: "$wordsInTopic" } } },
+      { $project: { wordsInTopic: 0 } },
+      { $sort: { createdAt: -1 } },
+    ]);
+
+    res.json({ success: true, data: topics });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// 2. User tạo chủ đề mới
+export const createUserTopic = async (req, res) => {
+  try {
+    const { nameTopic, meaning } = req.body;
+    const userId = req.user._id;
+
+    if (!nameTopic || !meaning) {
+      return res.status(400).json({ message: "Cần nhập tên và nghĩa chủ đề" });
+    }
+
+    // Kiểm tra trùng tên (trong phạm vi của user đó)
+    const exists = await topicModel.findOne({ nameTopic, owner: userId });
+    if (exists) {
+      return res.status(400).json({ message: "Bạn đã có chủ đề này rồi" });
+    }
+
+    const newTopic = new topicModel({
+      nameTopic,
+      meaning,
+      owner: userId,
+      image: "", // Không bắt buộc ảnh
+      pronunciation: "", // Không bắt buộc
     });
+
+    await newTopic.save();
+    res.status(201).json({ success: true, data: newTopic });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

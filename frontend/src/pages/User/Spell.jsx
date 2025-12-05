@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../libs/axios'; // Dùng api (axios)
-import { AlertCircle, Volume2, ArrowLeft, RefreshCw } from 'lucide-react';
-import { studySessionService } from '../../services/studySessionService';
+import api from '../../libs/axios';
+import { AlertCircle, Volume2, ArrowLeft, RefreshCw, Loader2 } from 'lucide-react';
 import { updateWordProgress } from '../../services/progressService';
+// ĐÃ XÓA: import studySessionService để tránh lưu 2 lần
 
 export default function Spell() {
   const [words, setWords] = useState([]);
@@ -42,7 +42,6 @@ export default function Spell() {
       const result = response.data;
 
       if (result.success && result.data && result.data.length > 0) {
-        // Xáo trộn từ vựng
         setWords(result.data.sort(() => Math.random() - 0.5));
       } else {
         setError('Không tìm thấy từ vựng nào cho chủ đề này.');
@@ -65,11 +64,9 @@ export default function Spell() {
     }
   };
 
-  // Tự động phát âm khi chuyển từ
   useEffect(() => {
     if (words.length > 0 && !loading) {
-      // playAudio();
-      inputRef.current?.focus(); // Tự động focus vào input
+      inputRef.current?.focus(); 
     }
   }, [currentWordIndex, words, loading]);
 
@@ -95,7 +92,6 @@ export default function Spell() {
     }
   };
   
-  // Cho phép nhấn Enter để kiểm tra
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       if (isAnswered) {
@@ -113,17 +109,14 @@ export default function Spell() {
     const nextIndex = currentWordIndex + 1;
     if (nextIndex < words.length) {
       setCurrentWordIndex(nextIndex);
-      // Reset
       setIsAnswered(false);
       setIsCorrect(false);
       setInputValue("");
     } else {
-      // Hoàn thành
       handleViewResults();
     }
   };
 
-  // 5. Xử lý "Thử lại" (chỉ khi sai)
   const handleRetry = () => {
     setIsAnswered(false);
     setInputValue("");
@@ -131,40 +124,20 @@ export default function Spell() {
   };
 
   // 6. Xem kết quả
-  const handleViewResults = async () => {
-    try {
-      // Lưu kết quả session vào DB
-      await studySessionService.saveSession({
-          mode: 'spell',
-          totalQuestions: words.length, // SỬA: questions -> words
-          correctAnswers: correctCount, // Lưu số câu đúng
-          score: score                  // Lưu tổng điểm tích lũy
-      });
-      
-      localStorage.removeItem('spellSettings');
-      
-      // Chuyển trang
-      navigate('/vocabulary/spell/result', { 
-        state: { 
-          score: score, 
-          totalQuestions: words.length, // SỬA: questions -> words
-          correctCount: correctCount
-        } 
-      });
-    } catch (error) {
-      console.error("Lỗi khi lưu kết quả:", error);
-      // Vẫn chuyển trang dù lỗi lưu API để user không bị kẹt
-      navigate('/vocabulary/spell/result', { 
-        state: { 
-          score: score, 
-          totalQuestions: words.length, 
-          correctCount: correctCount
-        } 
-      });
-    }
+  const handleViewResults = () => {
+    // --- SỬA: KHÔNG GỌI API SAVE SESSION Ở ĐÂY NỮA ---
+    localStorage.removeItem('spellSettings');
+    
+    // Chuyển trang và để SpellResult lưu kết quả
+    navigate('/vocabulary/spell/result', { 
+      state: { 
+        score: score, 
+        totalQuestions: words.length, 
+        correctCount: correctCount
+      } 
+    });
   };
 
-  // 7. Thoát
   const handleGoBack = () => {
     if (confirm('Bạn có chắc muốn thoát? Tiến trình sẽ không được lưu.')) {
       localStorage.removeItem('spellSettings');
@@ -172,12 +145,11 @@ export default function Spell() {
     }
   };
 
-  // --- CÁC TRẠNG THÁI RENDER ---
   if (loading) {
     return (
       <div className="min-h-screen bg-green-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+          <Loader2 className="w-12 h-12 animate-spin text-green-600 mb-4" />
           <p className="text-gray-600 text-lg">Đang tải bài luyện tập...</p>
         </div>
       </div>
@@ -202,7 +174,7 @@ export default function Spell() {
     );
   }
   
-  if (words.length === 0) return null; // Trạng thái lỗi đã xử lý
+  if (words.length === 0) return null;
   
   const currentWord = words[currentWordIndex];
   const progress = ((currentWordIndex + 1) / words.length) * 100;
@@ -210,7 +182,6 @@ export default function Spell() {
   return (
     <div className="min-h-screen bg-green-50 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-md w-full">
-        {/* Header (Thoát) */}
         <div className="absolute top-4 left-4">
            <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-500 hover:text-green-600">
             <ArrowLeft size={20} />
@@ -218,9 +189,7 @@ export default function Spell() {
           </button>
         </div>
 
-        {/* Card chính */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Header Card */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <span className="text-sm font-medium text-gray-500">
@@ -238,7 +207,6 @@ export default function Spell() {
             </div>
           </div>
           
-          {/* Nội dung chính */}
           <div className="p-6 md:p-8">
             <div className="flex flex-col items-center">
               <button
@@ -254,7 +222,6 @@ export default function Spell() {
                 Nghĩa: {currentWord.translation}
               </p>
 
-              {/* Input */}
               <input
                 ref={inputRef}
                 type="text"
@@ -270,7 +237,6 @@ export default function Spell() {
                 } focus:outline-none transition`}
               />
 
-              {/* Phản hồi (Feedback) */}
               {isAnswered && (
                 <div 
                   className={`w-full p-4 rounded-lg mt-4 ${
@@ -285,10 +251,8 @@ export default function Spell() {
                 </div>
               )}
 
-              {/* Các nút bấm */}
               <div className="w-full mt-6 space-y-3">
                 {!isAnswered ? (
-                  // Trạng thái chưa trả lời
                   <div className="flex gap-3">
                     <button
                       onClick={playAudio}
@@ -306,7 +270,6 @@ export default function Spell() {
                     </button>
                   </div>
                 ) : (
-                  // Trạng thái đã trả lời
                   <div className="flex gap-3">
                     {!isCorrect && (
                       <button

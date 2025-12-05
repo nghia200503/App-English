@@ -565,7 +565,9 @@ const loginUser = async (req, res) => {
       dob: user.dob,
       address: user.address,
       occupation: user.occupation,
-      learningGoal: user.learningGoal
+      learningGoal: user.learningGoal,
+      level: user.level, 
+      experiencePoints: user.experiencePoints
     };
 
     // Trả refresh token về trang coookie
@@ -800,9 +802,9 @@ const refreshToken = async (req, res) => {
 const userList = async (req, res) => {
   try {
     // 1. Lấy page và limit từ query params (giống topicList)
-    const page = parseInt(req.query.page) || 1;
+    const page = parseInt(req.query.page);
     // Đặt limit mặc định, ví dụ 8 (bạn có thể đổi thành 5 hoặc 10)
-    const limit = parseInt(req.query.limit) || 8;
+    const limit = parseInt(req.query.limit);
 
     // 2. Tính toán skip (giống topicList)
     const skip = (page - 1) * limit;
@@ -813,8 +815,8 @@ const userList = async (req, res) => {
     // 4. Lấy data với pagination (kết hợp logic cũ và mới)
     const users = await userModel
       .find()
-      .select("username displayName email avatarUrl phone role") // Giữ lại select từ hàm cũ
-      .sort({ createdAt: -1 }) // Sắp xếp mới nhất trước
+      .select("username displayName email avatarUrl phone role level experiencePoints") // Giữ lại select từ hàm cũ
+      .sort({ createdAt: 1 }) // Sắp xếp mới nhất trước
       .skip(skip)
       .limit(limit);
 
@@ -953,7 +955,7 @@ const updateUser = async (req, res) => {
     // Trả về thông tin user đã cập nhật
     const updatedUser = await userModel
       .findById(id)
-      .select("username displayName email avatarUrl phone role bio createdAt dob address occupation learningGoal");
+      .select("username displayName email avatarUrl phone role bio createdAt dob address occupation learningGoal level experiencePoints");
 
     return res.status(200).json({
       message: "Cập nhật người dùng thành công",

@@ -17,7 +17,7 @@ export default function UserList() {
     const [pagination, setPagination] = useState({
         totalPages: 0,
         totalItems: 0,
-        itemsPerPage: 4, // Đặt số này khớp với limit ở backend
+        itemsPerPage: 10, // Đặt số này khớp với limit ở backend
         hasNextPage: false,
         hasPrevPage: false
     });
@@ -247,7 +247,7 @@ export default function UserList() {
                                                 <td className="py-3 px-4">{user.displayName}</td>
                                                 <td className="py-3 px-4 text-center">
                                                     <span className="bg-purple-100 text-purple-800 font-semibold px-2.5 py-0.5 rounded">
-                                                        {user.level || 1}
+                                                        {user.level} - {user.experiencePoints} XP
                                                     </span>
                                                 </td>
                                                 <td className="py-3 px-4">{user.email}</td>
