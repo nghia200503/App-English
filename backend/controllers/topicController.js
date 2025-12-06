@@ -593,27 +593,32 @@ export const topicDelete = async (req, res) => {
 export const getAllTopics = async (req, res) => {
   try {
     const allTopics = await topicModel.aggregate([
+      // 1. Chỉ lấy các Topic hệ thống (owner là null)
       { $match: { owner: null } },
       {
         $lookup: {
-          from: "words",
+          from: "words", // Tên collection trong MongoDB (thường là 'words')
           let: { topicName: "$nameTopic" },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    // [SỬA LỖI TẠI ĐÂY]
-                    // 1. $trim: Cắt khoảng trắng đầu/cuối (ví dụ: "Health " -> "Health")
-                    // 2. $toLower: Chuyển về chữ thường để so sánh không phân biệt hoa thường
+                    // --- SỬA LỖI QUAN TRỌNG TẠI ĐÂY ---
                     {
                       $eq: [
-                        { $toLower: { $trim: { input: "$topic" } } }, // Field 'topic' bên bảng Words
-                        { $toLower: { $trim: { input: "$$topicName" } } }, // Field 'nameTopic' bên bảng Topics
+                        // Sử dụng $ifNull để đảm bảo không bị lỗi nếu field topic bị thiếu/null
+                        { $toLower: { $trim: { input: { $ifNull: ["$topic", ""] } } } },
+                        { $toLower: { $trim: { input: { $ifNull: ["$$topicName", ""] } } } },
                       ],
                     },
-                    // Chỉ đếm từ vựng hệ thống
-                    { $in: ["$owner", [null, undefined]] },
+                    // Kiểm tra owner là null HOẶC field owner không tồn tại
+                    {
+                      $or: [
+                        { $eq: ["$owner", null] },
+                        { $eq: [{ $type: "$owner" }, "missing"] } 
+                      ]
+                    }
                   ],
                 },
               },
@@ -622,8 +627,11 @@ export const getAllTopics = async (req, res) => {
           as: "wordsInTopic",
         },
       },
+      // Đếm số lượng phần tử trong mảng wordsInTopic vừa tìm được
       { $addFields: { wordCount: { $size: "$wordsInTopic" } } },
+      // Loại bỏ mảng wordsInTopic để giảm tải dữ liệu trả về
       { $project: { wordsInTopic: 0 } },
+      // Sắp xếp theo tên A-Z
       { $sort: { nameTopic: 1 } },
     ]);
 

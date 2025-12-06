@@ -195,7 +195,7 @@ export default function SpellPopup({ isOpen, onClose, onStartSpell }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  const themeColor = "green"; // Theme cho Spell
+  const themeColor = "purple"; // Theme cho Spell
 
   useEffect(() => {
     if (isOpen) {
@@ -339,7 +339,10 @@ export default function SpellPopup({ isOpen, onClose, onStartSpell }) {
               >
                 {topics.map((topic) => (
                   <option key={topic._id} value={topic._id}>
-                    {topic.nameTopic} {topic._id !== 'all' ? `- ${topic.meaning}` : `(${topic.wordCount} từ)`}
+                    {/* Hiển thị Tên + Nghĩa (nếu không phải All) + Số từ (Luôn hiển thị) */}
+                    {topic.nameTopic}
+                    {topic._id !== 'all' ? ` - ${topic.meaning}` : ''}
+                    {` (${topic.wordCount} từ)`}
                   </option>
                 ))}
               </select>
