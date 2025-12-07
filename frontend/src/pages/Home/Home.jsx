@@ -7,7 +7,7 @@ export default function VocabMasterHome() {
       {/* Header */}
       <header className="border-b border-gray-200">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-2xl font-bold text-blue-600">VocabMaster</div>
+          <div className="text-2xl font-bold text-blue-600">Vlearning</div>
           <div className="flex gap-4">
             <Link to="/login"><button className="cursor-pointer px-6 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition">
               Đăng nhập
@@ -63,7 +63,7 @@ export default function VocabMasterHome() {
       {/* Why Choose Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center mb-4">Tại sao chọn VocabMaster?</h2>
+          <h2 className="text-4xl font-bold text-center mb-4">Tại sao chọn Vlearning?</h2>
           <p className="text-center text-gray-600 mb-16 max-w-2xl mx-auto">
             Chúng tôi cung cấp những công cụ học tập hiện đại nhất để giúp bạn nắm vững từ vựng một cách hiệu quả và bền vững.
           </p>
@@ -222,7 +222,7 @@ export default function VocabMasterHome() {
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold mb-4">Sẵn sàng nâng cao vốn từ vựng của bạn?</h2>
           <p className="text-xl mb-8 text-blue-100">
-            Tham gia cùng hàng nghìn học viên đã cải thiện khả năng ngôn ngữ với VocabMaster
+            Tham gia cùng hàng nghìn học viên đã cải thiện khả năng ngôn ngữ với Vlearning
           </p>
           <div className="flex gap-4 justify-center">
             <Link to="/register"><button className="cursor-pointer px-8 py-4 bg-white text-blue-600 rounded-md hover:bg-gray-100 transition font-bold text-lg">
@@ -240,7 +240,7 @@ export default function VocabMasterHome() {
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="text-2xl font-bold text-white mb-4">VocabMaster</div>
+              <div className="text-2xl font-bold text-white mb-4">Vlearning</div>
               <p className="text-gray-400">
                 Ứng dụng học từ vựng thông minh giúp bạn nâng cao khả năng ngôn ngữ một cách hiệu quả.
               </p>
@@ -289,7 +289,7 @@ export default function VocabMasterHome() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>© 2024 VocabMaster. Tất cả quyền được bảo lưu.</p>
+            <p>© 2024 Vlearning. Tất cả quyền được bảo lưu.</p>
             <p className="mt-2 text-sm">Website Builder</p>
           </div>
         </div>

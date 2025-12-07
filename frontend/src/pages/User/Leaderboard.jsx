@@ -128,7 +128,6 @@ export default function Leaderboard() {
                         <Trophy className="text-yellow-600 w-8 h-8 fill-yellow-600" />
                     </div>
                     <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Bảng Xếp Hạng</h1>
-                    <p className="text-gray-500 mt-2 font-medium">Vinh danh những học viên xuất sắc nhất tuần này</p>
                 </div>
 
                 {/* Podium Section (Top 3) */}

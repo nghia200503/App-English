@@ -109,7 +109,7 @@ export default function ListenResult() {
             </div>
             <p className="text-3xl font-bold text-green-700">{correctAnswers}</p>
              {/* Hiển thị số điểm tương ứng (chỉ để xem, không gửi lên server) */}
-             <p className="text-xs text-green-600 mt-1">+{correctAnswers * 5} XP</p>
+             {/* <p className="text-xs text-green-600 mt-1">+{correctAnswers * 5} XP</p> */}
           </div>
 
           <div className="p-4 bg-red-50 rounded-xl border border-red-100">
@@ -121,10 +121,10 @@ export default function ListenResult() {
           </div>
         </div>
 
-        <div className="mb-8 p-4 bg-gray-50 rounded-xl">
+        {/* <div className="mb-8 p-4 bg-gray-50 rounded-xl">
           <p className="text-gray-500 text-sm mb-1">Điểm số đạt được</p>
           <p className="text-4xl font-bold text-gray-800">{percentage}/100</p>
-        </div>
+        </div> */}
 
         <div className="flex gap-3">
           <button

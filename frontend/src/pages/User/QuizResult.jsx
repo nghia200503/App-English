@@ -127,10 +127,10 @@ export default function QuizResult() {
                 </div>
 
                 {/* Điểm số */}
-                <div className="mb-8 p-4 bg-gray-50 rounded-xl">
+                {/* <div className="mb-8 p-4 bg-gray-50 rounded-xl">
                     <p className="text-gray-500 text-sm mb-1">Điểm số</p>
                     <p className="text-4xl font-bold text-gray-800">{percentage}/100</p>
-                </div>
+                </div> */}
 
                 {/* Actions */}
                 <div className="flex gap-3">

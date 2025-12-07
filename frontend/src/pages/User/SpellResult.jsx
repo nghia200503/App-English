@@ -117,10 +117,10 @@ export default function SpellResult() {
                 </div>
 
                 {/* Tỷ lệ chính xác */}
-                <div className="mb-8 p-4 bg-gray-50 rounded-xl">
+                {/* <div className="mb-8 p-4 bg-gray-50 rounded-xl">
                     <p className="text-gray-500 text-sm mb-1">Tỷ lệ chính xác</p>
                     <p className="text-4xl font-bold text-gray-800">{percentage}%</p>
-                </div>
+                </div> */}
 
                 {/* Actions */}
                 <div className="flex gap-3">

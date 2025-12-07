@@ -40,7 +40,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-25 relative overflow-hidden" style={{ backgroundColor: '#7159B6' }}>
+    <div className="min-h-screen flex items-center justify-center pt-5 relative overflow-hidden" style={{ backgroundColor: '#7159B6' }}>
 
       {/* <Navbar/> */}
 
