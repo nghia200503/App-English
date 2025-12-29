@@ -46,21 +46,52 @@ export const wordService = {
     }, 
 
     // Thêm nhiều words
-    addMultipleWords: async (wordsArray) => {
+    // addMultipleWords: async (wordsArray) => {
+    //     const formData = new FormData();
+
+    //     // 1. Thêm tổng số lượng từ
+    //     formData.append('count', wordsArray.length);
+
+    //     // 2. Lặp qua mảng các từ và thêm vào FormData với chỉ số (index)
+    //     wordsArray.forEach((wordData, index) => {
+    //         formData.append(`word_${index}`, wordData.word);
+    //         formData.append(`pronunciation_${index}`, wordData.pronunciation);
+    //         formData.append(`translation_${index}`, wordData.translation);
+    //         formData.append(`example_${index}`, wordData.example);
+    //         formData.append(`topic_${index}`, wordData.topic);
+    //         formData.append(`image_${index}`, wordData.imageFile);
+    //         formData.append(`audio_${index}`, wordData.audioFile);
+    //     });
+
+    //     const res = await api.post('/words/addbulk', formData, {
+    //         headers: {
+    //             'Content-Type': 'multipart/form-data'
+    //         }
+    //     });
+    //     return res.data;
+    // },
+
+    addWordBulk: async (wordsList) => {
         const formData = new FormData();
+        
+        // 1. Gửi tổng số lượng từ
+        formData.append('count', wordsList.length);
 
-        // 1. Thêm tổng số lượng từ
-        formData.append('count', wordsArray.length);
+        // 2. Duyệt qua từng từ và append vào formData với index
+        wordsList.forEach((item, index) => {
+            formData.append(`word_${index}`, item.word);
+            formData.append(`pronunciation_${index}`, item.pronunciation || '');
+            formData.append(`translation_${index}`, item.translation);
+            formData.append(`example_${index}`, item.example || '');
+            formData.append(`topic_${index}`, item.topic);
 
-        // 2. Lặp qua mảng các từ và thêm vào FormData với chỉ số (index)
-        wordsArray.forEach((wordData, index) => {
-            formData.append(`word_${index}`, wordData.word);
-            formData.append(`pronunciation_${index}`, wordData.pronunciation);
-            formData.append(`translation_${index}`, wordData.translation);
-            formData.append(`example_${index}`, wordData.example);
-            formData.append(`topic_${index}`, wordData.topic);
-            formData.append(`image_${index}`, wordData.imageFile);
-            formData.append(`audio_${index}`, wordData.audioFile);
+            // Append file nếu có
+            if (item.imageFile) {
+                formData.append(`image_${index}`, item.imageFile);
+            }
+            if (item.audioFile) {
+                formData.append(`audio_${index}`, item.audioFile);
+            }
         });
 
         const res = await api.post('/words/addbulk', formData, {

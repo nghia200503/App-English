@@ -4,10 +4,12 @@ import { toast } from 'sonner';
 import Sidebar from '../../components/Sidebar';
 import { wordService } from '../../services/wordService';
 import { topicService } from '../../services/topicService';
+import * as XLSX from 'xlsx';
+import { Upload, FileSpreadsheet, Download, X, Music, Image as ImageIcon } from 'lucide-react';
 
-// Định nghĩa cấu trúc cho một form từ vựng rỗng
+// Cấu trúc khởi tạo cho một từ
 const initialWordState = {
-  id: Date.now(), // ID tạm thời để React render list
+  id: Date.now(),
   word: '',
   pronunciation: '',
   translation: '',
@@ -15,19 +17,17 @@ const initialWordState = {
   topic: '',
   imageFile: null,
   audioFile: null,
-  previewUrl: '', // Dùng cho ảnh
-  audioName: '',  // Dùng cho audio
+  previewUrl: '', // Để xem trước ảnh
+  audioName: '',  // Để hiển thị tên file audio
 };
 
 export default function WordAddBulk() {
-  // 1. State chính là một mảng, bắt đầu với 1 form rỗng
   const [words, setWords] = useState([initialWordState]);
-  
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [allTopics, setAllTopics] = useState([]);
 
-  // 2. Lấy danh sách chủ đề (giống như file WordAdd.jsx)
+  // 1. Lấy danh sách chủ đề để hiển thị dropdown
   useEffect(() => {
     const fetchTopics = async () => {
       try {
@@ -40,328 +40,417 @@ export default function WordAddBulk() {
         toast.error('Không thể tải danh sách chủ đề');
       }
     };
-
     fetchTopics();
   }, []);
 
-  // 3. Hàm cập nhật dữ liệu text/select cho một từ
-  const handleWordChange = (id, field, value) => {
-    setWords(prevWords => 
-      prevWords.map(word => 
-        word.id === id ? { ...word, [field]: value } : word
-      )
-    );
-  };
-
-  // 4. Hàm cập nhật file (ảnh/audio) cho một từ
-  const handleFileChange = (id, fileType, file) => {
+  // 2. Xử lý đọc file Excel
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
     if (!file) return;
 
-    if (fileType === 'image') {
-      // Validate ảnh (giống code cũ)
-      if (!file.type.startsWith('image/')) {
-        toast.error('Vui lòng chọn file ảnh hợp lệ');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Kích thước ảnh không được vượt quá 5MB');
-        return;
-      }
-      
-      // Tạo preview và cập nhật state
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setWords(prevWords => 
-          prevWords.map(word => 
-            word.id === id ? { ...word, imageFile: file, previewUrl: reader.result } : word
-          )
-        );
-      };
-      reader.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const workbook = XLSX.read(bstr, { type: 'binary' });
+        const wsname = workbook.SheetNames[0];
+        const ws = workbook.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
 
-    } else if (fileType === 'audio') {
-      // Validate audio (giống code cũ)
-      if (!file.type.startsWith('audio/')) {
-        toast.error('Vui lòng chọn file âm thanh hợp lệ');
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('Kích thước file âm thanh không được vượt quá 10MB');
-        return;
-      }
+        if (data.length === 0) {
+            toast.error("File Excel rỗng!");
+            return;
+        }
 
-      // Cập nhật state
-      setWords(prevWords => 
-        prevWords.map(word => 
-          word.id === id ? { ...word, audioFile: file, audioName: file.name } : word
-        )
-      );
-    }
+        // Map dữ liệu từ Excel vào state
+        const importedWords = data.map((row, index) => ({
+            id: Date.now() + index,
+            word: row['Từ vựng'] || row['Word'] || '',
+            pronunciation: row['Phát âm'] || row['Pronunciation'] || '',
+            translation: row['Nghĩa'] || row['Meaning'] || '',
+            example: row['Ví dụ'] || row['Example'] || '',
+            topic: row['Chủ đề'] || row['Topic'] || '', 
+            // File media phải để trống để user upload thủ công sau
+            imageFile: null,
+            audioFile: null,
+            previewUrl: '',
+            audioName: ''
+        }));
+
+        setWords(importedWords);
+        toast.success(`Đã nhập ${importedWords.length} dòng text. Vui lòng thêm ảnh/audio thủ công!`);
+        e.target.value = null; // Reset input
+
+      } catch (error) {
+        console.error("Lỗi đọc Excel:", error);
+        toast.error("File Excel không đúng định dạng.");
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
-  // 5. Hàm thêm một form từ vựng mới
-  const addWordForm = () => {
-    setWords(prevWords => [
-      ...prevWords,
-      { ...initialWordState, id: Date.now() } // Thêm form rỗng mới
+  // 3. Tải file mẫu
+  const downloadSample = () => {
+    const ws = XLSX.utils.json_to_sheet([
+        { "Từ vựng": "Apple", "Phát âm": "/ˈæp.l/", "Nghĩa": "Quả táo", "Ví dụ": "I eat an apple", "Chủ đề": "Fruits" },
+        { "Từ vựng": "Dog", "Phát âm": "/dɒɡ/", "Nghĩa": "Con chó", "Ví dụ": "The dog barks", "Chủ đề": "Animals" }
     ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Mau_Nhap_Tu");
+    XLSX.writeFile(wb, "Mau_Tu_Vung.xlsx");
   };
 
-  // 6. Hàm xóa một form
-  const removeWordForm = (id) => {
-    if (words.length > 1) {
-      setWords(prevWords => prevWords.filter(word => word.id !== id));
-    } else {
-      toast.error('Phải có ít nhất một từ vựng');
+  // 4. Xử lý thay đổi input text
+  const handleInputChange = (index, field, value) => {
+    const newWords = [...words];
+    newWords[index][field] = value;
+    setWords(newWords);
+  };
+
+  // 5. Xử lý chọn File (Ảnh/Audio)
+  const handleFileChange = (index, type, file) => {
+    const newWords = [...words];
+    
+    if (type === 'image') {
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+            toast.error("Vui lòng chọn file ảnh hợp lệ!");
+            return;
+        }
+        newWords[index].imageFile = file;
+        // Tạo preview ảnh
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newWords[index].previewUrl = reader.result;
+          setWords([...newWords]); 
+        };
+        reader.readAsDataURL(file);
+      }
+    } else if (type === 'audio') {
+      if (file) {
+        if (!file.type.startsWith('audio/')) {
+            toast.error("Vui lòng chọn file âm thanh hợp lệ!");
+            return;
+        }
+        newWords[index].audioFile = file;
+        newWords[index].audioName = file.name;
+        setWords(newWords);
+      }
     }
   };
 
-  // 7. Hàm Submit (gửi tất cả)
+  // Thêm/Xóa dòng
+  const addWordForm = () => {
+    setWords([...words, { ...initialWordState, id: Date.now() }]);
+  };
+
+  const removeWordForm = (index) => {
+    if (words.length > 1) {
+      const newWords = words.filter((_, i) => i !== index);
+      setWords(newWords);
+    } else {
+        toast.warning("Cần ít nhất 1 từ vựng!");
+    }
+  };
+
+  // 6. Xử lý Submit (Validation kỹ càng)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    // Validate cho TẤT CẢ các từ trong mảng
-    for (const [index, wordData] of words.entries()) {
-      if (!wordData.word.trim()) {
-        toast.error(`Từ vựng #${index + 1}: Vui lòng nhập từ vựng`); return;
-      }
-      if (!wordData.pronunciation.trim()) {
-        toast.error(`Từ vựng #${index + 1}: Vui lòng nhập phát âm`); return;
-      }
-      if (!wordData.translation.trim()) {
-        toast.error(`Từ vựng #${index + 1}: Vui lòng nhập nghĩa`); return;
-      }
-      if (!wordData.example.trim()) {
-        toast.error(`Từ vựng #${index + 1}: Vui lòng nhập ví dụ`); return;
-      }
-      if (!wordData.topic.trim()) {
-        toast.error(`Từ vựng #${index + 1}: Vui lòng chọn chủ đề`); return;
-      }
-      if (!wordData.imageFile) {
-        toast.error(`Từ vựng #${index + 1}: Vui lòng chọn ảnh`); return;
-      }
-      if (!wordData.audioFile) {
-        toast.error(`Từ vựng #${index + 1}: Vui lòng chọn file âm thanh`); return;
-      }
+    for (let i = 0; i < words.length; i++) {
+        const item = words[i];
+        const rowNum = i + 1;
+        
+        // Check Text
+        if (!item.word || !item.translation || !item.topic) {
+            toast.error(`Hàng ${rowNum}: Thiếu Từ, Nghĩa hoặc Chủ đề!`);
+            setLoading(false);
+            return;
+        }
+
+        // Check Files (BẮT BUỘC)
+        if (!item.imageFile) {
+            toast.error(`Hàng ${rowNum} (${item.word || 'Chưa nhập tên'}): Thiếu file ẢNH!`);
+            setLoading(false);
+            // Cuộn tới phần tử bị lỗi (Logic nâng cao, ở đây alert là đủ)
+            return;
+        }
+
+        if (!item.audioFile) {
+            toast.error(`Hàng ${rowNum} (${item.word || 'Chưa nhập tên'}): Thiếu file ÂM THANH!`);
+            setLoading(false);
+            return;
+        }
     }
 
     try {
-      setLoading(true);
-      // Gọi service addMultipleWords (đã định nghĩa ở backend bước trước)
-      await wordService.addMultipleWords(words); 
-      
-      navigate('/admin/word-list');
-      toast.success(`Thêm ${words.length} từ vựng thành công!`);
+      // Gửi dữ liệu sang Service
+      const response = await wordService.addWordBulk(words);
+      if (response.success) {
+        toast.success(response.message);
+        navigate('/admin/word-list');
+      }
     } catch (error) {
-      console.error('Lỗi khi thêm hàng loạt:', error);
-      toast.error(error.response?.data?.message || 'Không thể thêm từ vựng');
+      console.error('Lỗi thêm từ:', error);
+      toast.error(error.response?.data?.error || 'Lỗi hệ thống khi thêm từ.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/admin/word-list'); // Hoặc '/words' tùy route của bạn
-  };
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
-
-      <div className="flex-1 ml-64">
-        <div className="container mx-auto p-6 max-w-2xl">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Thêm nhiều từ vựng</h1>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              
-              {/* 8. Dùng .map() để render các form */}
-              {words.map((wordData, index) => (
-                <div key={wordData.id} className="border-2 border-dashed border-gray-300 p-6 rounded-lg relative space-y-6">
-                  
-                  {/* Nút xóa form (chỉ hiển thị nếu > 1 form) */}
-                  {words.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeWordForm(wordData.id)}
-                      className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg hover:bg-red-600 transition-colors"
-                    >
-                      &times;
-                    </button>
-                  )}
-
-                  <h3 className="font-semibold text-lg text-gray-800">Từ vựng #{index + 1}</h3>
-
-                  {/* Từ vựng */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Từ vựng <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={wordData.word}
-                      onChange={(e) => handleWordChange(wordData.id, 'word', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nhập từ vựng"
-                    />
-                  </div>
-
-                  {/* Phát âm */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phát âm <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={wordData.pronunciation}
-                      onChange={(e) => handleWordChange(wordData.id, 'pronunciation', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nhập phiên âm"
-                    />
-                  </div>
-
-                  {/* Nghĩa */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nghĩa <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={wordData.translation}
-                      onChange={(e) => handleWordChange(wordData.id, 'translation', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nhập nghĩa tiếng Việt"
-                    />
-                  </div>
-
-                  {/* Ví dụ */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ví dụ <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={wordData.example}
-                      onChange={(e) => handleWordChange(wordData.id, 'example', e.target.value)}
-                      rows="3"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nhập câu ví dụ"
-                    />
-                  </div>
-
-                  {/* Chủ đề */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Chủ đề <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={wordData.topic}
-                      onChange={(e) => handleWordChange(wordData.id, 'topic', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="" disabled>-- Chọn một chủ đề --</option>
-                      {allTopics.length > 0 ? (
-                        allTopics.map((topicItem) => (
-                          <option key={topicItem._id} value={topicItem.nameTopic}>
-                            {topicItem.nameTopic} (Nghĩa: {topicItem.meaning})
-                          </option>
-                        ))
-                      ) : (
-                        <option value="" disabled>Đang tải chủ đề...</option>
-                      )}
-                    </select>
-                  </div>
-
-                  {/* Hình ảnh */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hình ảnh <span className="text-red-500">*</span>
-                    </label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                      <div className="space-y-1 text-center">
-                        {wordData.previewUrl ? (
-                          <img src={wordData.previewUrl} alt="Preview" className="mx-auto h-32 w-32 object-cover rounded-lg"/>
-                        ) : (
-                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        )}
-                        <div className="flex text-sm text-gray-600">
-                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                            <span>{wordData.previewUrl ? 'Chọn ảnh khác' : 'Chọn ảnh'}</span>
-                            <input
-                              type="file"
-                              className="sr-only"
-                              accept="image/*"
-                              onChange={(e) => handleFileChange(wordData.id, 'image', e.target.files[0])}
-                            />
-                          </label>
-                        </div>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF tối đa 5MB</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* File âm thanh */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      File âm thanh <span className="text-red-500">*</span>
-                    </label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                      <div className="space-y-1 text-center">
-                        {wordData.audioName ? (
-                          <div className="flex items-center justify-center space-x-2"><svg className="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg><span className="text-sm text-gray-700">{wordData.audioName}</span></div>
-                        ) : (
-                          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
-                        )}
-                        <div className="flex text-sm text-gray-600">
-                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                            <span>{wordData.audioName ? 'Chọn file khác' : 'Chọn file âm thanh'}</span>
-                            <input
-                              type="file"
-                              className="sr-only"
-                              accept="audio/*"
-                              onChange={(e) => handleFileChange(wordData.id, 'audio', e.target.files[0])}
-                            />
-                          </label>
-                        </div>
-                        <p className="text-xs text-gray-500">MP3, WAV, OGG tối đa 10MB</p>
-                      </div>
-                    </div>
-                  </div>
-
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          <div className="max-w-6xl mx-auto">
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">Thêm từ vựng hàng loạt</h2>
+                  <p className="text-gray-500 mt-1">
+                    Nhập Excel cho nhanh, nhưng <span className="text-red-600 font-bold">bắt buộc</span> phải upload Ảnh & Audio thủ công.
+                  </p>
                 </div>
-              ))}
+                
+                {/* Excel Actions */}
+                <div className="flex gap-3">
+                    <button 
+                        onClick={downloadSample}
+                        type="button"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 border border-green-200 transition"
+                    >
+                        <Download size={18} /> Tải mẫu Excel
+                    </button>
+                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-sm font-medium">
+                        <FileSpreadsheet size={18} />
+                        <span>Nhập từ Excel</span>
+                        <input 
+                            type="file" 
+                            accept=".xlsx, .xls" 
+                            className="hidden" 
+                            onChange={handleExcelUpload}
+                        />
+                    </label>
+                </div>
+              </div>
 
-              {/* 9. Nút thêm form mới */}
-              <button
-                type="button"
-                onClick={addWordForm}
-                disabled={loading}
-                className="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-400"
-              >
-                + Thêm một từ vựng khác
-              </button>
+              <form onSubmit={handleSubmit}>
+                <div className="space-y-6">
+                {words.map((item, index) => (
+                  <div 
+                    key={item.id} 
+                    className={`p-6 rounded-xl border transition-all duration-200 ${
+                        (!item.imageFile || !item.audioFile) ? 'bg-red-50 border-red-200 shadow-sm' : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    {/* Header Row */}
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
+                            #{index + 1}
+                        </span>
+                        {(!item.imageFile || !item.audioFile) && (
+                            <span className="text-red-500 text-xs font-bold flex items-center gap-1">
+                                <AlertCircleIcon /> Thiếu file media
+                            </span>
+                        )}
+                      </div>
+                      
+                      {words.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeWordForm(index)}
+                          className="text-gray-400 hover:text-red-500 hover:bg-white p-2 rounded-full transition"
+                          title="Xóa dòng này"
+                        >
+                          <X size={20} />
+                        </button>
+                      )}
+                    </div>
 
-              {/* 10. Buttons Submit/Cancel chung */}
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Đang thêm...' : `Thêm ${words.length} từ vựng`}
-                </button>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      {/* Cột trái: TEXT INPUTS (Chiếm 7 phần) */}
+                      <div className="lg:col-span-7 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Từ vựng <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    value={item.word}
+                                    onChange={(e) => handleInputChange(index, 'word', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Ex: Apple"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phiên âm</label>
+                                <input
+                                    type="text"
+                                    value={item.pronunciation}
+                                    onChange={(e) => handleInputChange(index, 'pronunciation', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Ex: /ˈæp.l/"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nghĩa tiếng Việt <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                value={item.translation}
+                                onChange={(e) => handleInputChange(index, 'translation', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="Ví dụ: Quả táo"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ví dụ câu</label>
+                            <textarea
+                                value={item.example}
+                                onChange={(e) => handleInputChange(index, 'example', e.target.value)}
+                                rows="2"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                                placeholder="Ex: I eat an apple."
+                            />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Chủ đề <span className="text-red-500">*</span></label>
+                          <select
+                            value={item.topic}
+                            onChange={(e) => handleInputChange(index, 'topic', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                            required
+                          >
+                            <option value="">-- Chọn chủ đề --</option>
+                            {allTopics.map((t) => (
+                              <option key={t._id} value={t.nameTopic}>
+                                {t.nameTopic} ({t.wordCount || 0} từ)
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Cột phải: MEDIA UPLOAD (Chiếm 5 phần) */}
+                      <div className="lg:col-span-5 space-y-4">
+                        
+                        {/* Ảnh Upload */}
+                        <div className={`p-4 rounded-lg border-2 border-dashed relative group transition-colors ${!item.imageFile ? 'border-red-300 bg-red-50/50' : 'border-blue-200 bg-blue-50/30'}`}>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                                Ảnh minh họa <span className="text-red-500">*</span>
+                            </label>
+                            
+                            {item.previewUrl ? (
+                                <div className="relative h-32 w-full">
+                                    <img src={item.previewUrl} alt="Preview" className="h-full w-full object-contain mx-auto rounded-md" />
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            const newWords = [...words];
+                                            newWords[index].imageFile = null;
+                                            newWords[index].previewUrl = '';
+                                            setWords(newWords);
+                                        }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 z-10"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="cursor-pointer flex flex-col items-center justify-center h-32 w-full">
+                                    <ImageIcon className={`w-8 h-8 mb-2 ${!item.imageFile ? 'text-red-400' : 'text-blue-400'}`} />
+                                    <span className={`text-sm font-medium ${!item.imageFile ? 'text-red-500' : 'text-blue-600'}`}>
+                                        Chọn file Ảnh
+                                    </span>
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(index, 'image', e.target.files[0])} />
+                                </label>
+                            )}
+                        </div>
+
+                        {/* Audio Upload */}
+                        <div className={`p-4 rounded-lg border relative transition-colors ${!item.audioFile ? 'border-red-300 bg-red-50/50' : 'border-green-200 bg-green-50/30'}`}>
+                           <label className="block text-sm font-bold text-gray-700 mb-2">
+                                Âm thanh phát âm <span className="text-red-500">*</span>
+                           </label>
+                           
+                           <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <div className={`p-2 rounded-full ${item.audioFile ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
+                                        <Music size={20} />
+                                    </div>
+                                    <span className="text-sm text-gray-600 truncate max-w-[150px]">
+                                        {item.audioName || "Chưa có file"}
+                                    </span>
+                                </div>
+                                <label className="cursor-pointer bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm">
+                                    Browse
+                                    <input type="file" className="hidden" accept="audio/*" onChange={(e) => handleFileChange(index, 'audio', e.target.files[0])} />
+                                </label>
+                           </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                </div>
+
+                {/* Add More Button */}
                 <button
                   type="button"
-                  onClick={handleCancel}
+                  onClick={addWordForm}
                   disabled={loading}
-                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                  className="mt-6 w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 hover:border-blue-300 transition-all font-medium flex items-center justify-center gap-2"
                 >
-                  Hủy
+                  <Upload size={20} /> Thêm một từ vựng khác
                 </button>
-              </div>
-            </form>
+
+                {/* Footer Action Buttons */}
+                <div className="flex gap-4 pt-6 mt-6 border-t border-gray-200 sticky bottom-0 bg-white z-20 shadow-[0_-10px_20px_rgba(255,255,255,0.8)]">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 disabled:bg-gray-400 disabled:shadow-none transition-all flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                        <>Loading...</>
+                    ) : (
+                        <>Lưu {words.length} từ vựng</>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/admin/word-list')}
+                    disabled={loading}
+                    className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                  >
+                    Hủy bỏ
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+// Icon helper nhỏ (nếu bạn chưa có icon AlertCircle)
+function AlertCircleIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+    )
 }

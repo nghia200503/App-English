@@ -3,27 +3,47 @@ import cloudinary from '../libs/cloudinary.js';
 import streamifier from 'streamifier';
 
 // --- Helper Function để upload buffer lên Cloudinary ---
-const uploadToCloudinary = (fileBuffer, resourceType = 'auto', folder = 'words') => {
-    return new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-            {
-                resource_type: resourceType,
-                folder: folder
-            },
-            (error, result) => {
-                if (error) {
-                    reject(new Error(`Cloudinary upload error: ${error.message}`));
-                } else {
-                    resolve({
-                        url: result.secure_url,
-                        public_id: result.public_id
-                    });
-                }
+const uploadToCloudinary = async (fileBuffer, resourceType = 'auto', folder = 'words', retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        resource_type: resourceType,
+                        folder: folder,
+                        // TĂNG TIMEOUT LÊN 2 PHÚT (120000ms)
+                        timeout: 120000 
+                    },
+                    (error, result) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve({
+                                url: result.secure_url,
+                                public_id: result.public_id
+                            });
+                        }
+                    }
+                );
+                streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+            });
+        } catch (error) {
+            // Kiểm tra lỗi: ECONNRESET (rớt mạng) HOẶC Timeout (quá hạn)
+            const isNetworkError = error.code === 'ECONNRESET' || 
+                                   error.message.includes('ECONNRESET') || 
+                                   error.message.includes('Timeout') || 
+                                   error.http_code === 499;
+
+            if (isNetworkError && i < retries - 1) {
+                console.log(`⚠️ Lỗi upload (Lần ${i + 1}/${retries}): ${error.message}. Đang thử lại...`);
+                // Đợi 2 giây trước khi thử lại (tăng thời gian đợi lên)
+                await new Promise(res => setTimeout(res, 2000)); 
+            } else {
+                // Nếu hết lượt thử hoặc lỗi khác (như sai định dạng file) thì ném lỗi ra
+                throw error; 
             }
-        );
-        // Ghi buffer vào stream để upload
-        streamifier.createReadStream(fileBuffer).pipe(uploadStream);
-    });
+        }
+    }
 };
 
 // Lấy tất cả từ vựng với phân trang
@@ -278,16 +298,15 @@ export const wordDelete = async (req, res) => {
 
 export const wordAddBulk = async (req, res) => {
   try {
-    // 1. Lấy tổng số từ được gửi lên
     const { count } = req.body;
+    // Log để kiểm tra
+    console.log(`Bắt đầu xử lý ${count} từ...`);
+
     if (!count || count <= 0) {
-      return res.status(400).json({ success: false, error: "Thiếu tham số 'count'" });
+      return res.status(400).json({ success: false, error: "Dữ liệu không hợp lệ" });
     }
 
     const wordsToCreate = [];
-    const uploadPromises = [];
-    
-    // 2. Map các file đã upload để dễ truy cập bằng fieldname
     const filesByFieldName = {};
     if (req.files) {
       for (const file of req.files) {
@@ -295,67 +314,69 @@ export const wordAddBulk = async (req, res) => {
       }
     }
 
-    // 3. Lặp qua từng từ để xử lý
+    // Xử lý tuần tự từng từ
     for (let i = 0; i < count; i++) {
-      // Lấy data text
       const word = req.body[`word_${i}`];
       const pronunciation = req.body[`pronunciation_${i}`];
       const translation = req.body[`translation_${i}`];
       const example = req.body[`example_${i}`];
       const topic = req.body[`topic_${i}`];
 
-      // Lấy file
       const imageFile = filesByFieldName[`image_${i}`];
       const audioFile = filesByFieldName[`audio_${i}`];
 
-      // Validate
-      if (!word || !pronunciation || !translation || !example || !topic || !imageFile || !audioFile) {
-        console.warn(`Bỏ qua từ ở vị trí ${i} do thiếu dữ liệu.`);
-        // Bạn có thể chọn trả về lỗi 400 ở đây nếu muốn
-        continue; 
+      if (!word || !translation || !topic || !imageFile || !audioFile) {
+        return res.status(400).json({ 
+            success: false, 
+            error: `Từ thứ ${i + 1} (${word || '...'}) thiếu thông tin hoặc file.` 
+        });
       }
 
-      // 4. Tạo promise cho việc upload và chuẩn bị data
-      uploadPromises.push(
-        // Upload 2 file song song
-        Promise.all([
-          uploadToCloudinary(imageFile.buffer, 'image'),
-          uploadToCloudinary(audioFile.buffer, 'video') 
-        ]).then(([imageResult, audioResult]) => {
-          // Thêm đối tượng word hoàn chỉnh vào mảng
+      try {
+          console.log(`--> Đang upload file cho từ: "${word}"...`);
+          
+          // Upload Ảnh
+          const imgRes = await uploadToCloudinary(imageFile.buffer, 'image');
+          
+          // Upload Audio
+          const audRes = await uploadToCloudinary(audioFile.buffer, 'video');
+
           wordsToCreate.push({
-            word,
-            pronunciation,
-            translation,
-            example,
-            topic,
-            image: imageResult.url,
-            imagePublicId: imageResult.public_id,
-            audio: audioResult.url,
-            audioPublicId: audioResult.public_id
+              word,
+              pronunciation: pronunciation || "",
+              translation,
+              example: example || "",
+              topic,
+              image: imgRes.url,
+              imagePublicId: imgRes.public_id,
+              audio: audRes.url,
+              audioPublicId: audRes.public_id
           });
-        })
-      );
+
+          console.log(`✅ Xong từ: "${word}"`);
+
+      } catch (uploadErr) {
+          console.error(`❌ Lỗi upload tại từ: ${word}`, uploadErr);
+          // Trả về lỗi chi tiết hơn
+          return res.status(500).json({ 
+              success: false, 
+              error: `Upload thất bại ở từ "${word}": ${uploadErr.message}. Hãy kiểm tra mạng và thử lại.` 
+          });
+      }
     }
 
-    // 5. Chờ tất cả upload hoàn tất
-    await Promise.all(uploadPromises);
-
-    // 6. Thêm tất cả từ vựng vào DB bằng insertMany
     if (wordsToCreate.length > 0) {
       const savedWords = await wordModel.insertMany(wordsToCreate);
       res.status(201).json({
         success: true,
-        message: `Thêm thành công ${savedWords.length}/${count} từ vựng.`,
+        message: `Đã thêm thành công ${savedWords.length} từ vựng!`,
         data: savedWords
       });
-    } else {
-      res.status(400).json({ success: false, error: "Không có từ vựng hợp lệ nào được xử lý." });
     }
 
   } catch (err) {
-    console.error("Lỗi khi thêm từ vựng hàng loạt:", err);
-    res.status(500).json({ success: false, error: "Lỗi server khi thêm hàng loạt" });
+    console.error("Lỗi chung:", err);
+    res.status(500).json({ success: false, error: "Lỗi server: " + err.message });
   }
 };
 
