@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
-import { 
-    Trophy, Star, Calendar, Activity, 
-    TrendingUp, CheckCircle2, XCircle, Clock 
-} from 'lucide-react';
+import { Trophy, Star, Calendar, Activity, CheckSquare, TrendingUp, CheckCircle2, Edit3, Headphones, Layers, Clock } from 'lucide-react';
 import { studySessionService } from '../../services/studySessionService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import Header from '../../components/Header';
@@ -55,13 +52,13 @@ export default function ProgressPage() {
         });
     };
 
-    // Helper: Icon và tên chế độ học
+    // Helper: Icon và tên chế độ học 
     const getModeInfo = (mode) => {
         switch (mode) {
-            case 'quiz': return { label: 'Trắc nghiệm', color: 'text-blue-600', bg: 'bg-blue-100', icon: <Activity size={18} /> };
-            case 'listen': return { label: 'Luyện nghe', color: 'text-purple-600', bg: 'bg-purple-100', icon: <Activity size={18} /> }; // Có thể thay icon tai nghe
-            case 'flashcard': return { label: 'Flashcard', color: 'text-yellow-600', bg: 'bg-yellow-100', icon: <Activity size={18} /> };
-            case 'spell': return { label: 'Chính tả', color: 'text-green-600', bg: 'bg-green-100', icon: <Activity size={18} /> };
+            case 'quiz': return { label: 'Trắc nghiệm', color: 'text-green-600', bg: 'bg-green-100', icon: <CheckSquare size={18} /> };
+            case 'listen': return { label: 'Nghe & chọn', color: 'text-orange-600', bg: 'bg-orange-100', icon: <Headphones size={18} /> };
+            case 'flashcard': return { label: 'Flashcard', color: 'text-blue-600', bg: 'bg-blue-100', icon: <Layers size={18} /> };
+            case 'spell': return { label: 'Nghe & Viết', color: 'text-purple-600', bg: 'bg-purple-100', icon: <Edit3 size={18} /> };
             default: return { label: mode, color: 'text-gray-600', bg: 'bg-gray-100', icon: <Activity size={18} /> };
         }
     };

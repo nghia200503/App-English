@@ -175,9 +175,9 @@ export default function Listen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-orange-600 mb-4" />
           <p className="text-gray-600 text-lg">Đang tạo bài luyện nghe...</p>
         </div>
       </div>
@@ -186,14 +186,14 @@ export default function Listen() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
           <AlertCircle className="text-red-500 w-12 h-12 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Thông báo</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/vocabulary')}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+            className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
           >
             Quay về trang từ vựng
           </button>
@@ -223,10 +223,10 @@ export default function Listen() {
   };
 
   return (
-    <div className="min-h-screen bg-purple-50 p-4 md:p-8 flex items-center justify-center">
+    <div className="min-h-screen bg-orange-50 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full">
         <div className="absolute top-4 left-4">
-           <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-500 hover:text-purple-600">
+           <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-500 hover:text-orange-600">
             <ArrowLeft size={20} />
             Thoát
           </button>
@@ -239,13 +239,13 @@ export default function Listen() {
               <span className="text-sm font-medium text-gray-500">
                 Từ {currentQuestionIndex + 1}/{quizQuestions.length}
               </span>
-              <span className="text-sm font-medium text-purple-600">
+              <span className="text-sm font-medium text-orange-600">
                 Đúng: {score}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                className="bg-orange-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -261,7 +261,7 @@ export default function Listen() {
               
               <button
                 onClick={() => playAudio(1.0)}
-                className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mb-4 text-purple-600 hover:bg-purple-200 transition"
+                className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-4 text-orange-600 hover:bg-orange-200 transition"
               >
                 <Volume2 size={36} />
               </button>
@@ -313,7 +313,7 @@ export default function Listen() {
             <button
               onClick={handleNext}
               disabled={!isAnswered}
-              className="md:col-span-2 w-full px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition disabled:bg-gray-300 mt-4"
+              className="md:col-span-2 w-full px-6 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 mt-4"
             >
               {currentQuestionIndex === quizQuestions.length - 1 ? 'Xem kết quả' : 'Từ tiếp theo'}
             </button>

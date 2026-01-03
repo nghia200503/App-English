@@ -172,18 +172,18 @@ export default function Quiz() {
       <div className="max-w-4xl mx-auto">
         
         <div className="flex justify-between items-center mb-4">
-          <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-600 hover:text-blue-600">
+          <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-600 hover:text-green-600">
             <ArrowLeft size={20} />
             Thoát
           </button>
-          <span className="text-lg font-bold text-blue-600">
+          <span className="text-lg font-bold text-green-600">
             Câu {currentQuestionIndex + 1}/{questions.length}
           </span>
         </div>
 
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="bg-green-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -193,8 +193,8 @@ export default function Quiz() {
             
             <div className="md:sticky md:top-24">
               <p className="text-base text-gray-500 mb-2">Từ này có nghĩa là gì?</p>
-              <div className="bg-blue-50 p-6 rounded-lg text-center flex items-center justify-center min-h-[150px]">
-                <h2 className="text-4xl font-bold text-blue-700">
+              <div className="bg-green-50 p-6 rounded-lg text-center flex items-center justify-center min-h-[150px]">
+                <h2 className="text-4xl font-bold text-green-700">
                   {currentQuestion.question}
                 </h2>
               </div>
@@ -237,7 +237,7 @@ export default function Quiz() {
               {currentQuestionIndex < questions.length - 1 ? (
                 <button
                   onClick={handleNextQuestion}
-                  className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                  className="w-full px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
                 >
                   Tiếp theo
                 </button>

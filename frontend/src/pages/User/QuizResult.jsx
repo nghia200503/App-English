@@ -79,7 +79,7 @@ export default function QuizResult() {
             <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
                 <div className="text-center">
                     <p className="text-gray-600 mb-4">Không có dữ liệu kết quả.</p>
-                    <button onClick={handleGoBack} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <button onClick={handleGoBack} className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                         Về trang từ vựng
                     </button>
                 </div>
@@ -93,8 +93,8 @@ export default function QuizResult() {
 
                 {/* Icon Cúp & Badge XP */}
                 <div className="mb-6 relative inline-block">
-                    <div className="absolute inset-0 bg-blue-200 rounded-full blur-xl opacity-50"></div>
-                    <div className="relative bg-blue-100 p-4 rounded-full text-blue-600">
+                    <div className="absolute inset-0 bg-green-200 rounded-full blur-xl opacity-50"></div>
+                    <div className="relative bg-green-100 p-4 rounded-full text-green-600">
                         <Trophy size={48} />
                     </div>
                     {earnedXP > 0 && (
@@ -143,7 +143,7 @@ export default function QuizResult() {
                     </button>
                     <button
                         onClick={() => setIsQuizPopupOpen(true)}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition shadow-lg shadow-green-200"
                     >
                         <RotateCw size={20} />
                         Làm lại

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../libs/axios';
 import { AlertCircle, Volume2, ArrowLeft, RefreshCw, Loader2 } from 'lucide-react';
 import { updateWordProgress } from '../../services/progressService';
-// ĐÃ XÓA: import studySessionService để tránh lưu 2 lần
 
 export default function Spell() {
   const [words, setWords] = useState([]);
@@ -21,7 +20,6 @@ export default function Spell() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
 
-  // 1. Lấy cài đặt và fetch từ vựng
   useEffect(() => {
     const settingsData = localStorage.getItem('spellSettings');
     if (!settingsData) {
@@ -147,9 +145,9 @@ export default function Spell() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-green-600 mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mb-4" />
           <p className="text-gray-600 text-lg">Đang tải bài luyện tập...</p>
         </div>
       </div>
@@ -158,14 +156,14 @@ export default function Spell() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
           <AlertCircle className="text-red-500 w-12 h-12 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Đã xảy ra lỗi</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/vocabulary')}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
           >
             Quay về trang từ vựng
           </button>
@@ -180,10 +178,10 @@ export default function Spell() {
   const progress = ((currentWordIndex + 1) / words.length) * 100;
 
   return (
-    <div className="min-h-screen bg-green-50 p-4 md:p-8 flex items-center justify-center">
+    <div className="min-h-screen bg-purple-50 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-md w-full">
         <div className="absolute top-4 left-4">
-           <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-500 hover:text-green-600">
+           <button onClick={handleGoBack} className="flex items-center gap-2 text-gray-500 hover:text-purple-600">
             <ArrowLeft size={20} />
             Thoát
           </button>
@@ -195,13 +193,13 @@ export default function Spell() {
               <span className="text-sm font-medium text-gray-500">
                 Từ {currentWordIndex + 1}/{words.length}
               </span>
-              <span className="text-sm font-medium text-green-600">
+              <span className="text-sm font-medium text-purple-600">
                 Điểm: {score}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -211,7 +209,7 @@ export default function Spell() {
             <div className="flex flex-col items-center">
               <button
                 onClick={playAudio}
-                className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600 hover:bg-green-200 transition"
+                className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mb-4 text-purple-600 hover:bg-purple-200 transition"
               >
                 <Volume2 size={36} />
               </button>
@@ -231,16 +229,16 @@ export default function Spell() {
                 disabled={isAnswered}
                 placeholder="Nhập từ bạn nghe được..."
                 className={`w-full p-4 text-center text-lg border-2 rounded-lg ${
-                  isAnswered && isCorrect ? 'border-green-500 bg-green-50' :
+                  isAnswered && isCorrect ? 'border-purple-500 bg-purple-50' :
                   isAnswered && !isCorrect ? 'border-red-500 bg-red-50' :
-                  'border-gray-300 focus:border-green-500'
+                  'border-gray-300 focus:border-purple-500'
                 } focus:outline-none transition`}
               />
 
               {isAnswered && (
                 <div 
                   className={`w-full p-4 rounded-lg mt-4 ${
-                    isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                    isCorrect ? 'bg-green-50 border border-purple-200' : 'bg-red-50 border border-red-200'
                   }`}
                 >
                   <h3 className={`font-bold text-lg ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
@@ -264,7 +262,7 @@ export default function Spell() {
                     <button
                       onClick={handleCheck}
                       disabled={!inputValue}
-                      className="flex-[3] px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:bg-gray-300"
+                      className="flex-[3] px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition disabled:bg-gray-300"
                     >
                       Kiểm tra
                     </button>
@@ -281,7 +279,7 @@ export default function Spell() {
                     )}
                     <button
                       onClick={handleNext}
-                      className="flex-[2] px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+                      className="flex-[2] px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition"
                     >
                       {currentWordIndex === words.length - 1 ? 'Xem kết quả' : 'Từ tiếp theo'}
                     </button>

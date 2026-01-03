@@ -34,7 +34,6 @@ export default function Vocabulary(){
   const [isListenPopupOpen, setIsListenPopupOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Load learned words from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('learnedWords');
     if (saved) {
@@ -42,13 +41,10 @@ export default function Vocabulary(){
     }
   }, []);
 
-  // --- SỬA LẠI LOGIC FETCH ---
-  // 1. Fetch topics MỘT LẦN khi component mount
   useEffect(() => {
     fetchTopics();
   }, []);
 
-  // 2. Fetch words BẤT CỨ KHI NÀO filter (page, topic, search) thay đổi
   useEffect(() => {
     fetchWords();
   }, [pagination.currentPage, selectedTopic, searchTerm]);
@@ -57,7 +53,6 @@ export default function Vocabulary(){
   const fetchWords = async () => {
     try {
       setLoading(true);
-      // Gọi service với ĐẦY ĐỦ tham số filter
       const response = await wordService.getAllWords(
         pagination.currentPage, 
         pagination.itemsPerPage,
@@ -78,7 +73,6 @@ export default function Vocabulary(){
 
   const fetchTopics = async () => {
     try {
-      // Dùng getAllTopicsDropdown (từ topicService) sẽ hiệu quả hơn
       const response = await topicService.getAllTopicsDropdown(); 
       
       if (response.success) {
@@ -109,16 +103,10 @@ export default function Vocabulary(){
     });
   };
 
-  // --- XÓA BIẾN filteredWords ---
-  // const filteredWords = words.filter(...) 
-  // Backend đã lọc, 'words' chính là dữ liệu đã lọc
-  // -------------------------------
-
   // Tính toán số từ đã học/chưa học
   const learnedCount = words.filter(w => learnedWords.has(w._id)).length;
   const notLearnedCount = words.length - learnedCount;
 
-  // --- TẠO HÀM HANDLER MỚI ĐỂ RESET PAGE ---
   const handleTopicChange = (e) => {
     setSelectedTopic(e.target.value);
     // Khi đổi filter, quay về trang 1
@@ -163,9 +151,9 @@ export default function Vocabulary(){
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         
-        {/* 1. Header Section */}
+        {/* Header Section */}
 
-        {/* 2. Learning Modes Grid (Cards đẹp hơn) */}
+        {/* Learning Modes Grid  */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           
           {/* Flashcard */}
@@ -234,15 +222,15 @@ export default function Vocabulary(){
               <div className="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <Headphones size={28} />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-orange-600 transition-colors">Luyện Nghe</h3>
+              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-orange-600 transition-colors">Nghe & Chọn</h3>
               <p className="text-slate-500 text-sm leading-relaxed">
-                Cải thiện khả năng nghe hiểu và phát âm chuẩn bản xứ.
+                Cải thiện khả năng nghe hiểu và chọn từ vựng.
               </p>
             </div>
           </div>
         </div>
 
-        {/* 3. Filters & Stats Bar */}
+        {/* Filters & Stats Bar */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             
@@ -302,7 +290,7 @@ export default function Vocabulary(){
           </div>
         </div>
 
-        {/* 4. Words List Header */}
+        {/* Words List Header */}
         <div className="flex items-center gap-3 mb-6">
           <BookOpen className="text-blue-600" size={24} />
           <h2 className="text-xl font-bold text-slate-800">
@@ -313,7 +301,7 @@ export default function Vocabulary(){
           </h2>
         </div>
 
-        {/* 5. Words Grid */}
+        {/* Words Grid */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>

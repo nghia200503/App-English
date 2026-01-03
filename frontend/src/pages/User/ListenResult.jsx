@@ -79,13 +79,13 @@ export default function ListenResult() {
   }
 
   return (
-    <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-orange-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center animate-fadeIn">
         
         {/* Khu vực Icon Cúp & Badge XP */}
         <div className="mb-6 relative inline-block">
-          <div className="absolute inset-0 bg-yellow-200 rounded-full blur-xl opacity-50"></div>
-          <div className="relative bg-yellow-100 p-4 rounded-full text-yellow-600">
+          <div className="absolute inset-0 bg-orange-200 rounded-full blur-xl opacity-50"></div>
+          <div className="relative bg-orange-100 p-4 rounded-full text-orange-600">
             <Trophy size={48} />
           </div>
           
@@ -137,7 +137,7 @@ export default function ListenResult() {
           
           <button
             onClick={() => navigate('/vocabulary')} 
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition shadow-lg shadow-purple-200"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white font-medium rounded-xl hover:bg-orange-700 transition shadow-lg shadow-orange-200"
           >
             <RotateCw size={20} />
             Tiếp tục

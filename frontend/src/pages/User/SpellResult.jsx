@@ -71,20 +71,20 @@ export default function SpellResult() {
 
     if (totalQuestions === 0) {
         return (
-            <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
-                <button onClick={handleGoBack} className="text-green-600 hover:underline">Quay lại</button>
+            <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
+                <button onClick={handleGoBack} className="text-purple-600 hover:underline">Quay lại</button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center animate-fadeIn">
 
                 {/* Icon Cúp & Badge XP */}
                 <div className="mb-6 relative inline-block">
-                    <div className="absolute inset-0 bg-emerald-200 rounded-full blur-xl opacity-50"></div>
-                    <div className="relative bg-emerald-100 p-4 rounded-full text-emerald-600">
+                    <div className="absolute inset-0 bg-purple-200 rounded-full blur-xl opacity-50"></div>
+                    <div className="relative bg-purple-100 p-4 rounded-full text-purple-600">
                         <Trophy size={48} />
                     </div>
                     {earnedXP > 0 && (
@@ -116,12 +116,6 @@ export default function SpellResult() {
                     </div>
                 </div>
 
-                {/* Tỷ lệ chính xác */}
-                {/* <div className="mb-8 p-4 bg-gray-50 rounded-xl">
-                    <p className="text-gray-500 text-sm mb-1">Tỷ lệ chính xác</p>
-                    <p className="text-4xl font-bold text-gray-800">{percentage}%</p>
-                </div> */}
-
                 {/* Actions */}
                 <div className="flex gap-3">
                     <button
@@ -134,7 +128,7 @@ export default function SpellResult() {
                     
                     <button
                         onClick={() => navigate('/vocabulary/spell')} 
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-200"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition shadow-lg shadow-purple-200"
                     >
                         <RotateCw size={20} />
                         Luyện tiếp

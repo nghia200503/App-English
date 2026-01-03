@@ -200,9 +200,10 @@ export default function WordAddBulk() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 ml-64">
         <div className="p-8">
           <div className="max-w-6xl mx-auto">
             
@@ -444,7 +445,6 @@ export default function WordAddBulk() {
   );
 }
 
-// Icon helper nhỏ (nếu bạn chưa có icon AlertCircle)
 function AlertCircleIcon() {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
